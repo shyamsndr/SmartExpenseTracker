@@ -38,7 +38,8 @@
 						<div class="card">
 							<div class="card-body">
 								<div class="m-sm-3">
-									<form>
+									<form id="login-form" method="POST">
+										{% csrf_token %}
 										<div class="mb-3">
 											<label class="form-label">Email</label>
 											<input class="form-control form-control-lg" type="email" name="email" placeholder="Enter your email" required 
@@ -67,6 +68,11 @@
 			</div>
 		</div>
 	</main>
+	{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
 
 	<script src="{% static 'js/app.js' %}"></script>
 

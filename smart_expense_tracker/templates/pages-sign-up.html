@@ -14,6 +14,20 @@
 
     <link href="{% static 'css/app.css' %}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        .modal-content {
+            text-align: center;
+        }
+        .modal-backdrop.show {
+            opacity: 0.8;
+        }
+        .modal-dialog {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 <body>
     <main class="d-flex w-100">
@@ -62,17 +76,24 @@
         </div>
     </main>
 
-    <!-- Toast Notification -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
-        <div id="toast-message" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body" id="toast-body">
-                    <!-- Dynamic Message Here -->
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+<!-- Modal -->
+<div class="modal fade" id="message-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Dynamic Message Here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
@@ -88,24 +109,31 @@
                     url: window.location.href,
                     data: $(this).serialize(),
                     success: function(response) {
-                        var toastEl = $('#toast-message');
+                        var modalEl = $('#message-modal');
+                        var modalBody = $('#modal-body');
+                        var modalTitle = $('#modal-title');
+    
+                        // Customize message and title based on status
                         if (response.status === 'success') {
-                            toastEl.removeClass('bg-danger').addClass('bg-success');
-                            $('#toast-body').text(response.message);
-                            // Show success toast
-                            var toast = new bootstrap.Toast(toastEl[0]);
-                            toast.show();
-                            // Redirect to index page after a short delay
-                            setTimeout(function() {
+                            modalTitle.text('Success');
+                            modalBody.text(response.message);
+                            modalEl.find('.modal-header').removeClass('bg-danger').addClass('bg-success');
+                            modalEl.find('.btn-close').removeClass('btn-danger').addClass('btn-success');
+    
+                            // Redirect to index after closing the modal
+                            modalEl.on('hidden.bs.modal', function () {
                                 window.location.href = response.redirect_url;
-                            }, 1500); // Adjust the delay as needed
+                            });
                         } else {
-                            toastEl.removeClass('bg-success').addClass('bg-danger');
-                            $('#toast-body').text(response.message);
-                            // Show error toast
-                            var toast = new bootstrap.Toast(toastEl[0]);
-                            toast.show();
+                            modalTitle.text('Error');
+                            modalBody.text(response.message);
+                            modalEl.find('.modal-header').removeClass('bg-success').addClass('bg-danger');
+                            modalEl.find('.btn-close').removeClass('btn-success').addClass('btn-danger');
                         }
+    
+                        // Show the modal
+                        var modal = new bootstrap.Modal(modalEl[0]);
+                        modal.show();
                     },
                     error: function() {
                         alert('An error occurred. Please try again.');
@@ -113,7 +141,7 @@
                 });
             });
         });
-    </script>
+    </script>    
     
 </body>
 </html>
