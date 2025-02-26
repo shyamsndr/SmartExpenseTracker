@@ -1,0 +1,147 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Responsive Admin &amp; Dashboard Template based on Bootstrap 5">
+    <meta name="author" content="AdminKit">
+    <meta name="keywords" content="adminkit, bootstrap, bootstrap 5, admin, dashboard, template, responsive, css, sass, html, theme, front-end, ui kit, web">
+
+    <link rel="shortcut icon" href="{% static 'img/icons/icon-48x48.png' %}" />
+    <title>Sign Up</title>
+
+    <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        .modal-content {
+            text-align: center;
+        }
+        .modal-backdrop.show {
+            opacity: 0.8;
+        }
+        .modal-dialog {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <main class="d-flex w-100">
+        <div class="container d-flex flex-column">
+            <div class="row vh-100">
+                <div class="col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto d-table h-100">
+                    <div class="d-table-cell align-middle">
+
+                        <div class="text-center mt-4">
+                            <h1 class="h2">Get started</h1>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="m-sm-3">
+                                    <form id="register-form" method="POST">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input class="form-control form-control-lg" type="email" name="email" placeholder="Enter your email" required 
+                                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Enter a valid email address"/>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Password</label>
+                                            <input class="form-control form-control-lg" type="password" name="password" placeholder="Enter password" required 
+                                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" 
+                                            title="Must contain at least 8 characters, including uppercase, lowercase, and a number"/>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Confirm Password</label>
+                                            <input class="form-control form-control-lg" type="password" name="confirm_password" placeholder="Confirm password" required />
+                                        </div>
+                                        <div class="d-grid gap-2 mt-3">
+                                            <button type="submit" class="btn btn-lg btn-primary">Sign up</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mb-3">
+                            Already have an account? <a href="{% url 'login' %}">Log In</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<!-- Modal -->
+<div class="modal fade" id="message-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Dynamic Message Here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle form submission with AJAX
+            $('#register-form').on('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+    
+                $.ajax({
+                    type: 'POST',
+                    url: window.location.href,
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        var modalEl = $('#message-modal');
+                        var modalBody = $('#modal-body');
+                        var modalTitle = $('#modal-title');
+    
+                        // Customize message and title based on status
+                        if (response.status === 'success') {
+                            modalTitle.text('Success');
+                            modalBody.text(response.message);
+                            modalEl.find('.modal-header').removeClass('bg-danger').addClass('bg-success');
+                            modalEl.find('.btn-close').removeClass('btn-danger').addClass('btn-success');
+    
+                            // Redirect to index after closing the modal
+                            modalEl.on('hidden.bs.modal', function () {
+                                window.location.href = response.redirect_url;
+                            });
+                        } else {
+                            modalTitle.text('Error');
+                            modalBody.text(response.message);
+                            modalEl.find('.modal-header').removeClass('bg-success').addClass('bg-danger');
+                            modalEl.find('.btn-close').removeClass('btn-success').addClass('btn-danger');
+                        }
+    
+                        // Show the modal
+                        var modal = new bootstrap.Modal(modalEl[0]);
+                        modal.show();
+                    },
+                    error: function() {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>    
+    
+</body>
+</html>
