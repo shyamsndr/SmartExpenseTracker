@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Expenzo - Add Expense{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">Add Expense</h1>
+
+        <!-- Amount Input Field -->
+        <div class="mb-3">
+            <input type="number" class="form-control" id="amount" placeholder="Enter Amount" required>
+        </div>
+
+        <!-- Category Dropdown -->
+        <div class="mb-3">
+            <label for="category">Category</label>
+            <div class="input-group">
+                <select class="form-select" id="category" required>
+                    <option value="" selected>Select Category</option>
+                    <option>Food</option>
+                    <option>Shopping</option>
+                    <option>Travel</option>
+                </select>
+                <a href="{% url 'manage_categories' %}" class="btn btn-secondary">Manage</a>
+            </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="mb-3">
+            <label for="payment_method">Payment Method</label>
+            <div class="input-group">
+                <select class="form-select" id="payment_method" required>
+                    <option value="" selected>Select Payment Method</option>
+                    <option>Cash</option>
+                    <option>Credit Card</option>
+                    <option>UPI</option>
+                </select>
+                <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage</a>
+            </div>
+        </div>
+
+        <!-- Description Field -->
+        <div class="mb-3">
+            <label for="description">Description</label>
+            <textarea class="form-control" rows="2" id="description" placeholder="Enter Description"></textarea>
+        </div>
+
+        <!-- Date & Time Fields -->
+        <div class="mb-3">
+            <label for="date">Date</label>
+            <input type="date" class="form-control" id="date">
+        </div>
+
+        <div class="mb-3">
+            <label for="time">Time</label>
+            <input type="time" class="form-control" id="time">
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center">
+            <button class="btn btn-primary">Submit Expense</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

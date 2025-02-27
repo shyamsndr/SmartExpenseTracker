@@ -30,16 +30,59 @@
 
 				<ul class="sidebar-nav">
 					<li class="sidebar-header">
-						Pages
+						Operations
 					</li>
 
-					<li class="sidebar-item active">
+					<li class="sidebar-item">
 						<a class="sidebar-link" href="{% url 'index' %}">
-              <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Dashboard</span>
+              <i class="align-middle" data-feather="plus-circle"></i> <span class="align-middle">Income</span>
             </a>
 					</li>
 
 					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'expense' %}">
+              <i class="align-middle" data-feather="minus-circle"></i> <span class="align-middle">Expense</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'graph' %}">
+              <i class="align-middle" data-feather="pie-chart"></i> <span class="align-middle">Graph</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'transactions' %}">
+              <i class="align-middle" data-feather="list"></i> <span class="align-middle">Table</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'budget_management' %}">
+              <i class="align-middle" data-feather="book"></i> <span class="align-middle">Budget Management</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'manage_categories' %}">
+              <i class="align-middle" data-feather="edit-3"></i> <span class="align-middle">Categories</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'manage_payment_methods' %}">
+              <i class="align-middle" data-feather="edit-3"></i> <span class="align-middle">Payment Method</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'manage_source_of_income' %}">
+              <i class="align-middle" data-feather="edit-3"></i> <span class="align-middle">Source of Income</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<li class="sidebar-header">Account</li>
 						<a class="sidebar-link" href="{% url 'login' %}">
               <i class="align-middle" data-feather="log-in"></i> <span class="align-middle">Sign In</span>
             </a>
@@ -48,12 +91,6 @@
 					<li class="sidebar-item">
 						<a class="sidebar-link" href="{% url 'register' %}">
               <i class="align-middle" data-feather="user-plus"></i> <span class="align-middle">Sign Up</span>
-            </a>
-					</li>
-
-					<li class="sidebar-item">
-						<a class="sidebar-link" href="{% url 'blankpage' %}">
-              <i class="align-middle" data-feather="book"></i> <span class="align-middle">Blank</span>
             </a>
 					</li>
 				</ul>

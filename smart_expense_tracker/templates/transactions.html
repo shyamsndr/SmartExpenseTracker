@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions - Expenzo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">Transaction History</h1>
+
+        <!-- Transaction Table -->
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Income</th>
+                    <th>Expense</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2025-02-27</td>
+                    <td>10:30 AM</td>
+                    <td>Salary</td>
+                    <td>Monthly Salary Credited</td>
+                    <td class="text-success">80,000</td>
+                    <td class="text-danger">0</td>
+                </tr>
+                <tr>
+                    <td>2025-02-26</td>
+                    <td>3:15 PM</td>
+                    <td>Food</td>
+                    <td>Lunch at restaurant</td>
+                    <td class="text-success">0</td>
+                    <td class="text-danger">500</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Buttons -->
+        <div class="text-center mt-3">
+            <a href="{% url 'index' %}" class="btn btn-primary">Add New Transaction</a>
+            <a href="{% url 'graph' %}" class="btn btn-info">Info</a>
+        </div>
+
+        <!-- Summary Table -->
+        <h3 class="mt-4">Summary</h3>
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Total Income</th>
+                    <th>Total Expense</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-success">80,000</td>
+                    <td class="text-danger">500</td>
+                    <td class="text-primary">79,500</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

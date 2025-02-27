@@ -62,6 +62,23 @@ def logout_view(request):
     messages.success(request, "Logged out successfully!")
     return redirect('login')
 
+def transactions_view(request):
+    return render(request, 'transactions.html')
 
-def blankpage_view(request):
-    return render(request, 'pages-blank.html')
+def expense_page(request):
+    return render(request, "expense.html")
+
+def manage_categories_page(request):
+    return render(request, "manage_categories.html")
+
+def manage_payment_methods_page(request):
+    return render(request, "manage_payment_methods.html")
+
+def manage_source_of_income(request):
+    return render(request, 'manage_source_of_income.html')
+
+def budget_management(request):
+    return render(request, 'budget_management.html')
+
+def graph_view(request):
+    return render(request, 'graph.html')
