@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% load static %} 
+
+{% block title %}Expenzo - Profile{% endblock %}
+
+{% block content %}
+<!-- Profile Page -->
+<main class="content">
+    <div class="container-fluid p-0">
+        <h1 class="h3 mb-3">Profile</h1>
+
+        <div class="card">
+            <div class="card-body text-center">
+                <!-- Profile Picture Section -->
+                <div class="mb-3">
+                    <img src="{% static 'img/avatars/avatar.jpg' %}" 
+                         alt="Profile Picture" class="rounded-circle" width="150" height="150">
+                </div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Upload New Profile Picture</label>
+                        <input class="form-control" type="file" name="profile_picture" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" type="text" name="email" value="user@example.com" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input class="form-control" type="text" name="first_name" placeholder="Enter first name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input class="form-control" type="text" name="last_name" placeholder="Enter last name" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reset Password Section -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h3 class="mb-3">Reset Password</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input class="form-control" type="password" name="current_password" placeholder="Enter current password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input class="form-control" type="password" name="new_password" placeholder="Enter new password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input class="form-control" type="password" name="confirm_password" placeholder="Confirm new password" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Reset Password</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}

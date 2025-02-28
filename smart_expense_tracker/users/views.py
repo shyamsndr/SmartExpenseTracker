@@ -82,3 +82,12 @@ def budget_management(request):
 
 def graph_view(request):
     return render(request, 'graph.html')
+
+def export_pdf(request):
+    return render(request, 'export_pdf.html')
+
+def export_csv(request):
+    return render(request, 'export_csv.html')
+
+def profile_view(request):
+    return render(request, 'profile.html')

@@ -7,6 +7,36 @@
     <div class="card p-4">
         <h1 class="h3 mb-3">Transaction History</h1>
 
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <select class="form-select">
+                    <option selected>Filter by Category</option>
+                    <option value="all">All</option>
+                    <option value="salary">Salary</option>
+                    <option value="food">Food</option>
+                    <option value="shopping">Shopping</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select">
+                    <option selected>Filter by Timeframe</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-success">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="mb-3 text-end">
+            <a href="{% url 'export_csv' %}" class="btn btn-outline-primary">Export CSV</a>
+            <a href="{% url 'export_pdf' %}" class="btn btn-outline-danger">Export PDF</a>
+        </div>
+
         <!-- Transaction Table -->
         <table class="table table-bordered">
             <thead class="table-dark">
@@ -42,7 +72,7 @@
         <!-- Buttons -->
         <div class="text-center mt-3">
             <a href="{% url 'index' %}" class="btn btn-primary">Add New Transaction</a>
-            <a href="{% url 'graph' %}" class="btn btn-info">Info</a>
+            <a href="{% url 'graph' %}" class="btn btn-info">Graph</a>
         </div>
 
         <!-- Summary Table -->
