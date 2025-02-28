@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .services import authenticate_user, register_user
+from .models import User
+from .services import authenticate_user, register_user, update_profile, change_password
 
 def login_view(request):
     if request.method == "POST":
@@ -40,6 +41,24 @@ def index(request):
         return redirect('login')  # Redirect to login if not authenticated
     return render(request, 'index.html')
 
+def profile_view(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user_id = request.session['user_id']
+    user = User.objects.get(u_id=user_id)
+
+    if request.method == "POST":
+        first_name = request.POST.get('first_name', user.first_name)  # Default to existing name
+        last_name = request.POST.get('last_name', user.last_name)  # Default to existing name
+        profile_picture = request.FILES.get('profile_picture')
+
+        success, message = update_profile(user_id, first_name, last_name, profile_picture)
+        messages.success(request, message) if success else messages.error(request, message)
+        return redirect('profile')
+
+    return render(request, 'profile.html', {'user': user})
+
 
 def logout_view(request):
     request.session.flush()
@@ -72,6 +91,3 @@ def export_pdf(request):
 
 def export_csv(request):
     return render(request, 'export_csv.html')
-
-def profile_view(request):
-    return render(request, 'profile.html')
