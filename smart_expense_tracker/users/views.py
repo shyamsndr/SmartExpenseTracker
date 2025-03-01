@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User
-from .services import authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source, delete_income_source
+from .services import authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source, delete_income_source, add_income
 
 def login_view(request):
     if request.method == "POST":
@@ -36,10 +36,26 @@ def register_view(request):
 
 
 def index(request):
-    # Check if user is logged in
     if 'user_id' not in request.session:
-        return redirect('login')  # Redirect to login if not authenticated
-    return render(request, 'index.html')
+        return redirect('login')  # Redirect to login if user is not authenticated
+
+    user = User.objects.get(u_id=request.session['user_id'])
+    sources = get_income_sources(user)  # Fetch user's income sources
+
+    if request.method == "POST":
+        amount = request.POST.get('amount')
+        source_id = request.POST.get('source_of_income')
+        payment_method = request.POST.get('payment_method')
+        description = request.POST.get('description')
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+
+        success, message = add_income(user, source_id, amount, payment_method, description, date, time)
+        messages.success(request, message) if success else messages.error(request, message)
+
+        return redirect('index')  # Redirect after handling form submission
+
+    return render(request, 'index.html', {'sources': sources})
 
 def profile_view(request):
     if 'user_id' not in request.session:

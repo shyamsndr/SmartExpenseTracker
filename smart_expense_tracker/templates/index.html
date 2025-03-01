@@ -7,60 +7,65 @@
     <div class="card p-4">
         <h1 class="h3 mb-3">Add Income</h1>
 
-        <!-- Amount Input Field -->
-        <div class="mb-3">
-            <input type="number" class="form-control" id="amount" placeholder="Enter Amount" required>
-        </div>
+        <form method="POST" action="{% url 'index' %}">
+            {% csrf_token %}
 
-        <!-- Source of Income Dropdown -->
-        <div class="mb-3">
-            <select class="form-select" id="source_of_income" required>
-                <option value="" selected>Select Source of Income</option>
-                <option>Salary</option>
-                <option>Freelancing</option>
-                <option>Investment</option>
-            </select>
-            <a href="{% url 'manage_source_of_income' %}" class="btn btn-secondary">Manage Sources</a>
-        </div>
+            <!-- Amount Input Field -->
+            <div class="mb-3">
+                <input type="number" class="form-control" name="amount" placeholder="Enter Amount" required>
+            </div>
 
-        <!-- Payment Method -->
-        <div class="mb-3">
-            <select class="form-select" id="payment_method" required>
-                <option value="" selected>Select Payment Method</option>
-                <option>Cash</option>
-                <option>Bank Transfer</option>
-                <option>UPI</option>
-            </select>
-            <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage Payment Methods</a>
-        </div>
+            <!-- Source of Income Dropdown -->
+            <div class="mb-3 d-flex align-items-center">
+                <select class="form-select me-2" name="source_of_income" required>
+                    <option value="" selected>Select Source of Income</option>
+                    {% for source in sources %}
+                        <option value="{{ source.source_id }}">{{ source.name }}</option>
+                    {% endfor %}
+                </select>
+                <a href="{% url 'manage_source_of_income' %}" class="btn btn-secondary">Manage Sources</a>
+            </div>
 
-        <!-- Description Field -->
-        <div class="mb-3">
-            <textarea class="form-control" rows="2" id="description" placeholder="Enter Description"></textarea>
-        </div>
+            <!-- Payment Method -->
+            <div class="mb-3 d-flex align-items-center">
+                <select class="form-select me-2" name="payment_method" required>
+                    <option value="" selected>Select Payment Method</option>
+                    <option>Cash</option>
+                    <option>Bank Transfer</option>
+                    <option>UPI</option>
+                </select>
+                <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage Payment Methods</a>
+            </div>
 
-        <!-- Date & Time Fields -->
-        <div class="mb-3">
-            <label for="date">Date</label>
-            <input type="date" class="form-control" id="date">
-        </div>
+            <!-- Description Field -->
+            <div class="mb-3">
+                <textarea class="form-control" rows="2" name="description" placeholder="Enter Description"></textarea>
+            </div>
 
-        <div class="mb-3">
-            <label for="time">Time</label>
-            <input type="time" class="form-control" id="time">
-        </div>
+            <!-- Date & Time Fields -->
+            <div class="mb-3">
+                <label for="date">Date</label>
+                <input type="date" class="form-control" name="date" required>
+            </div>
 
-        <!-- Submit Button -->
-        <div class="mb-3">
-            <button class="btn btn-success">Submit Income</button>
-        </div>
+            <div class="mb-3">
+                <label for="time">Time</label>
+                <input type="time" class="form-control" name="time" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success w-100">Submit Income</button>
+            </div>
+        </form>
+
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    alert("{{ message }}");
+                </script>
+            {% endfor %}
+        {% endif %}
     </div>
 </div>
-{% if messages %}
-{% for message in messages %}
-    <script>
-        alert("{{ message }}");
-    </script>
-{% endfor %}
-{% endif %}
 {% endblock %}

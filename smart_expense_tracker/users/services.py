@@ -1,4 +1,4 @@
-from .models import User, SourceOfIncome
+from .models import User, SourceOfIncome, Income
 from django.contrib.auth.hashers import make_password, check_password
 
 def authenticate_user(email, password):
@@ -63,8 +63,7 @@ def change_password(user_id, current_password, new_password):
         return False, "User not found."
     
 def get_income_sources(user):
-    """Retrieve all income sources for the user."""
-    return SourceOfIncome.objects.filter(user=user).order_by('name')
+    return SourceOfIncome.objects.filter(user=user)
 
 def add_income_source(user, name):
     """Add a new income source if it doesn't already exist."""
@@ -82,3 +81,24 @@ def delete_income_source(user, source_id):
         return True, "Source deleted successfully."
     except SourceOfIncome.DoesNotExist:
         return False, "Source not found."
+    
+def add_income(user, source_id, amount, payment_method, description, date, time):
+    """Handles adding a new income transaction."""
+    try:
+        source = SourceOfIncome.objects.get(user=user, source_id=source_id)
+
+        # Save income entry
+        Income.objects.create(
+            user=user,
+            source=source,
+            amount=amount,
+            payment_method=payment_method,
+            description=description,
+            date=date,
+            time=time
+        )
+        return True, "Income added successfully!"
+    except SourceOfIncome.DoesNotExist:
+        return False, "Invalid source of income."
+    except Exception as e:
+        return False, str(e)
