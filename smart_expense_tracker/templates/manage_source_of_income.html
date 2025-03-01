@@ -9,21 +9,23 @@
 
         <!-- Add New Source of Income -->
         <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Enter new source" required>
-            <button class="btn btn-primary">Add</button>
+        <form method="POST" class="input-group mb-3">
+            {% csrf_token %}
+            <input type="text" class="form-control" name="source_name" placeholder="Enter new source" required>
+            <button type="submit" class="btn btn-primary">Add</button>
         </div>
 
         <!-- Sources List -->
+
         <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                Salary <button class="btn btn-danger btn-sm">Delete</button>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                Freelancing <button class="btn btn-danger btn-sm">Delete</button>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                Investment <button class="btn btn-danger btn-sm">Delete</button>
-            </li>
+            {% for source in sources %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ source.name }}
+                    <a href="{% url 'delete_source_of_income' source.source_id %}" class="btn btn-danger btn-sm">Delete</a>
+                </li>
+            {% empty %}
+                <li class="list-group-item text-center">No sources found.</li>
+            {% endfor %}
         </ul>
 
         <!-- Buttons to navigate to income & expense pages -->
@@ -33,4 +35,13 @@
         </div>
     </div>
 </div>
+
+{% if messages %}
+{% for message in messages %}
+    <script>
+        alert("{{ message }}");
+    </script>
+{% endfor %}
+{% endif %}
+
 {% endblock %}

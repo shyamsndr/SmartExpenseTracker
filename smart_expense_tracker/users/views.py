@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User
-from .services import authenticate_user, register_user, update_profile, change_password
+from .services import authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source, delete_income_source
 
 def login_view(request):
     if request.method == "POST":
@@ -49,8 +49,8 @@ def profile_view(request):
     user = User.objects.get(u_id=user_id)
 
     if request.method == "POST":
-        first_name = request.POST.get('first_name', user.first_name)  # Default to existing name
-        last_name = request.POST.get('last_name', user.last_name)  # Default to existing name
+        first_name = request.POST.get('first_name', user.first_name)
+        last_name = request.POST.get('last_name', user.last_name)
         profile_picture = request.FILES.get('profile_picture')
 
         success, message = update_profile(user_id, first_name, last_name, profile_picture)
@@ -59,6 +59,26 @@ def profile_view(request):
 
     return render(request, 'profile.html', {'user': user})
 
+def change_password_view(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user_id = request.session['user_id']
+
+    if request.method == "POST":
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+        else:
+            success, message = change_password(user_id, current_password, new_password)
+            messages.success(request, message) if success else messages.error(request, message)
+
+        return redirect('change_password')
+
+    return render(request, 'change_password.html')
 
 def logout_view(request):
     request.session.flush()
@@ -78,7 +98,28 @@ def manage_payment_methods_page(request):
     return render(request, "manage_payment_methods.html")
 
 def manage_source_of_income(request):
-    return render(request, 'manage_source_of_income.html')
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(u_id=request.session['user_id'])
+
+    if request.method == "POST":
+        source_name = request.POST.get('source_name')
+        success, message = add_income_source(user, source_name)
+        messages.success(request, message) if success else messages.error(request, message)
+        return redirect('manage_source_of_income')
+
+    sources = get_income_sources(user)
+    return render(request, 'manage_source_of_income.html', {'sources': sources})
+
+def delete_source_of_income(request, source_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(u_id=request.session['user_id'])
+    success, message = delete_income_source(user, source_id)
+    messages.success(request, message) if success else messages.error(request, message)
+    return redirect('manage_source_of_income')
 
 def budget_management(request):
     return render(request, 'budget_management.html')

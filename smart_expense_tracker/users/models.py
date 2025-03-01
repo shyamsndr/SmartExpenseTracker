@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import UniqueConstraint
 
 class User(models.Model):
     u_id = models.AutoField(primary_key=True)
@@ -10,3 +11,16 @@ class User(models.Model):
 
     def __str__(self):
         return self.email
+    
+class SourceOfIncome(models.Model):
+    source_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'name'], name='unique_user_source')
+        ]
+
+    def __str__(self):
+        return self.name
