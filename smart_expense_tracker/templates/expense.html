@@ -8,59 +8,67 @@
         <h1 class="h3 mb-3">Add Expense</h1>
 
         <!-- Amount Input Field -->
-        <div class="mb-3">
-            <input type="number" class="form-control" id="amount" placeholder="Enter Amount" required>
-        </div>
-
-        <!-- Category Dropdown -->
-        <div class="mb-3">
-            <label for="category">Category</label>
-            <div class="input-group">
-                <select class="form-select" id="category" required>
-                    <option value="" selected>Select Category</option>
-                    {% for category in categories %}
-                    <option>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-                <a href="{% url 'manage_categories' %}" class="btn btn-secondary">Manage</a>
+        <form method="POST" action="{% url 'add_expense' %}">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <input type="number" class="form-control" id="amount" name="amount" placeholder="Enter Amount" required>
             </div>
-        </div>
-
-        <!-- Payment Method -->
-        <div class="mb-3">
-            <label for="payment_method">Payment Method</label>
-            <div class="input-group">
-                <select class="form-select" id="payment_method" required>
-                    <option value="" selected>Select Payment Method</option>
-                    {% for method in methods %}
-                    <option>{{ method.name }}</option>
-                    {% endfor %}
-                </select>
-                <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage</a>
+        
+            <div class="mb-3">
+                <label for="category">Category</label>
+                <div class="input-group">
+                    <select class="form-select" id="category" name="category" required>
+                        <option value="" selected>Select Category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.category_id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <a href="{% url 'manage_categories' %}" class="btn btn-secondary">Manage</a>
+                </div>
             </div>
-        </div>
-
-        <!-- Description Field -->
-        <div class="mb-3">
-            <label for="description">Description</label>
-            <textarea class="form-control" rows="2" id="description" placeholder="Enter Description"></textarea>
-        </div>
-
-        <!-- Date & Time Fields -->
-        <div class="mb-3">
-            <label for="date">Date</label>
-            <input type="date" class="form-control" id="date">
-        </div>
-
-        <div class="mb-3">
-            <label for="time">Time</label>
-            <input type="time" class="form-control" id="time">
-        </div>
-
-        <!-- Submit Button -->
-        <div class="text-center">
-            <button class="btn btn-primary">Submit Expense</button>
-        </div>
+        
+            <div class="mb-3">
+                <label for="payment_method">Payment Method</label>
+                <div class="input-group">
+                    <select class="form-select" id="payment_method" name="payment_method" required>
+                        <option value="" selected>Select Payment Method</option>
+                        {% for method in methods %}
+                        <option value="{{ method.method_id }}">{{ method.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage</a>
+                </div>
+            </div>
+        
+            <div class="mb-3">
+                <label for="description">Description</label>
+                <textarea class="form-control" rows="2" id="description" name="description" placeholder="Enter Description"></textarea>
+            </div>
+        
+            <div class="mb-3">
+                <label for="date">Date</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+        
+            <div class="mb-3">
+                <label for="time">Time</label>
+                <input type="time" class="form-control" id="time" name="time" required>
+            </div>
+        
+            <div class="text-center">
+                <button class="btn btn-primary">Submit Expense</button>
+            </div>
+        </form>        
     </div>
 </div>
+
+{% if messages %}
+    {% for message in messages %}
+        <script>
+            alert("{{ message }}");
+        </script>
+    {% endfor %}
+{% endif %}
+
 {% endblock %}

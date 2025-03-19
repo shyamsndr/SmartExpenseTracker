@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import User
+from .models import User, Category, PaymentMethod
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
-                        get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods)
+                        get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
+                        add_expense)
 
 def base_view(request):
     user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
@@ -120,6 +121,29 @@ def expense_page(request):
     # Fetch categories and payment methods for the user
     categories = get_categories(user)
     methods = get_payment_methods(user)
+
+    return render(request, 'expense.html', {'categories': categories, 'methods': methods})
+
+def add_expense_view(request):
+    if 'user_id' not in request.session:
+        return redirect('login')  # Redirect to login if user is not authenticated
+
+    user = User.objects.get(u_id=request.session['user_id'])
+    categories = Category.objects.filter(user=user)  # Fetch user's categories
+    methods = PaymentMethod.objects.filter(user=user)  # Fetch user's payment methods
+
+    if request.method == "POST":
+        amount = request.POST.get('amount')
+        category_id = request.POST.get('category')
+        payment_method_id = request.POST.get('payment_method')
+        description = request.POST.get('description')
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+
+        success, message = add_expense(user, category_id, amount, payment_method_id, description, date, time)
+        messages.success(request, message) if success else messages.error(request, message)
+
+        return redirect('add_expense')
 
     return render(request, 'expense.html', {'categories': categories, 'methods': methods})
 

@@ -1,4 +1,4 @@
-from .models import User, SourceOfIncome, Income, PaymentMethod, Category
+from .models import User, SourceOfIncome, Income, PaymentMethod, Category, Expense
 from django.contrib.auth.hashers import make_password, check_password
 
 def authenticate_user(email, password):
@@ -146,3 +146,26 @@ def delete_category(user, category_id):
         return True, "Category deleted successfully."
     except Category.DoesNotExist:
         return False, "Category not found."
+    
+#inserting expenses    
+def add_expense(user, category_id, amount, payment_method_id, description, date, time):
+    """Handles adding a new expense transaction."""
+    try:
+        category = Category.objects.get(user=user, category_id=category_id)
+        payment_method = PaymentMethod.objects.get(user=user, method_id=payment_method_id)
+
+        # Save expense entry
+        Expense.objects.create(
+            user=user,
+            category=category,
+            payment_method=payment_method,
+            amount=amount,
+            description=description,
+            date=date,
+            time=time
+        )
+        return True, "Expense added successfully!"
+    except (Category.DoesNotExist, PaymentMethod.DoesNotExist):
+        return False, "Invalid category or payment method."
+    except Exception as e:
+        return False, str(e)

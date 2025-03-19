@@ -64,3 +64,17 @@ class Category(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.name}"
+    
+class Expense(models.Model):
+    expense_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to User
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)  # Link to Category
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)  # Link to Payment Method
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Store amount properly
+    description = models.TextField(blank=True, null=True)  # Optional Description
+    date = models.DateField()  # Store Date
+    time = models.TimeField()  # Store Time
+    created_at = models.DateTimeField(auto_now_add=True)  # Automatically add timestamp
+
+    def __str__(self):
+        return f"{self.user.email} - {self.amount} ({self.category.name})"
