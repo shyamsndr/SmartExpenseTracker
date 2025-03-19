@@ -1,7 +1,6 @@
 from .models import User, SourceOfIncome, Income, PaymentMethod, Category, Expense
 from django.contrib.auth.hashers import make_password, check_password
 import csv
-from io import StringIO
 from django.http import HttpResponse
 
 def authenticate_user(email, password):
@@ -173,3 +172,37 @@ def add_expense(user, category_id, amount, payment_method_id, description, date,
         return False, "Invalid category or payment method."
     except Exception as e:
         return False, str(e)
+    
+def export_transactions_to_csv(user):
+    """Generate and return a CSV file with both income and expenses."""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Type', 'Description', 'Amount', 'Category'])
+
+    # Fetch both expenses and incomes
+    expenses = Expense.objects.filter(user=user)
+    incomes = Income.objects.filter(user=user)
+
+    # Write expense data
+    for expense in expenses:
+        writer.writerow([
+            expense.date.strftime('%Y-%m-%d'),
+            'Expense',
+            expense.description,
+            expense.amount,
+            expense.category
+        ])
+
+    # Write income data
+    for income in incomes:
+        writer.writerow([
+            income.date.strftime('%Y-%m-%d'),
+            'Income',
+            income.description,
+            income.amount,
+            income.source  # Assuming 'source' is the category for income
+        ])
+
+    return response

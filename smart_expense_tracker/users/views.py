@@ -3,11 +3,10 @@ from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense
 from itertools import chain
 from operator import attrgetter
-from django.http import HttpResponse
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
-                        add_expense)
+                        add_expense, export_transactions_to_csv)
 
 def base_view(request):
     user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
@@ -285,4 +284,12 @@ def export_pdf(request):
     return render(request, 'export_pdf.html')
 
 def export_csv(request):
+    """Renders the export page with the download button."""
     return render(request, 'export_csv.html')
+
+def download_csv(request):
+    """Handles the CSV download request."""
+    if 'user_id' not in request.session:  # Ensure session-based authentication
+        return redirect('login')  # Redirect if user is not authenticated
+
+    return export_transactions_to_csv(request.session['user_id'])  # Pass session user ID

@@ -16,6 +16,7 @@ urlpatterns = [
     path('graph/', views.graph_view, name='graph'),
     path('export_pdf/', views.export_pdf, name='export_pdf'),
     path('export_csv/', views.export_csv, name='export_csv'),
+    path('download_csv/', views.download_csv, name='download_csv'),
     path('profile/', views.profile_view, name='profile'),
     path('change-password/', views.change_password_view, name='change_password'),
     path('delete-payment-method/<int:method_id>/', views.delete_payment_method_view, name='delete_payment_method'),
