@@ -5,6 +5,10 @@ from .services import (authenticate_user, register_user, update_profile, change_
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods)
 
+def base_view(request):
+    user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
+    return render(request, 'base.html', {'user': user})
+
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get('email')
