@@ -1,4 +1,4 @@
-from .models import User, SourceOfIncome, Income, PaymentMethod
+from .models import User, SourceOfIncome, Income, PaymentMethod, Category
 from django.contrib.auth.hashers import make_password, check_password
 
 def authenticate_user(email, password):
@@ -124,3 +124,25 @@ def delete_payment_method(user, method_id):
         return True, "Payment method deleted successfully."
     except PaymentMethod.DoesNotExist:
         return False, "Payment method not found."
+    
+#manage categories
+def get_categories(user):
+    """Fetch all categories for a user."""
+    return Category.objects.filter(user=user)
+
+def add_category(user, name):
+    """Add a new category if it doesn't already exist."""
+    if Category.objects.filter(user=user, name=name).exists():
+        return False, "Category already exists."
+    
+    Category.objects.create(user=user, name=name)
+    return True, "Category added successfully."
+
+def delete_category(user, category_id):
+    """Delete a category if the user owns it."""
+    try:
+        category = Category.objects.get(user=user, category_id=category_id)
+        category.delete()
+        return True, "Category deleted successfully."
+    except Category.DoesNotExist:
+        return False, "Category not found."

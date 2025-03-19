@@ -19,4 +19,5 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('change-password/', views.change_password_view, name='change_password'),
     path('delete-payment-method/<int:method_id>/', views.delete_payment_method_view, name='delete_payment_method'),
+    path('delete-category/<int:category_id>/', views.delete_category_view, name='delete_category'),
 ]

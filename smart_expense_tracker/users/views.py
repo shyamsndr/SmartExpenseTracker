@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
-                        delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method)
+                        delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
+                        get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods)
 
 def login_view(request):
     if request.method == "POST":
@@ -42,6 +43,7 @@ def index(request):
 
     user = User.objects.get(u_id=request.session['user_id'])
     sources = get_income_sources(user)  # Fetch user's income sources
+    methods = get_payment_methods(user) # Fetch user's payment methods
 
     if request.method == "POST":
         amount = request.POST.get('amount')
@@ -56,7 +58,7 @@ def index(request):
 
         return redirect('index')  # Redirect after handling form submission
 
-    return render(request, 'index.html', {'sources': sources})
+    return render(request, 'index.html', {'sources': sources, 'methods': methods})
 
 def profile_view(request):
     if 'user_id' not in request.session:
@@ -106,10 +108,42 @@ def transactions_view(request):
     return render(request, 'transactions.html')
 
 def expense_page(request):
-    return render(request, "expense.html")
+    if 'user_id' not in request.session:
+        return redirect('login')  # Redirect to login if user is not authenticated
+
+    user = User.objects.get(u_id=request.session['user_id'])
+    
+    # Fetch categories and payment methods for the user
+    categories = get_categories(user)
+    methods = get_payment_methods(user)
+
+    return render(request, 'expense.html', {'categories': categories, 'methods': methods})
 
 def manage_categories_page(request):
-    return render(request, "manage_categories.html")
+    """Page to manage categories."""
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(u_id=request.session['user_id'])
+
+    if request.method == "POST":
+        category_name = request.POST.get('category_name')
+        success, message = add_category(user, category_name)
+        messages.success(request, message) if success else messages.error(request, message)
+        return redirect('manage_categories')
+
+    categories = get_categories(user)
+    return render(request, "manage_categories.html", {'categories': categories})
+
+def delete_category_view(request, category_id):
+    """Delete a category."""
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(u_id=request.session['user_id'])
+    success, message = delete_category(user, category_id)
+    messages.success(request, message) if success else messages.error(request, message)
+    return redirect('manage_categories')
 
 def manage_payment_methods_page(request):
     if 'user_id' not in request.session:

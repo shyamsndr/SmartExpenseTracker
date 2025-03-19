@@ -51,3 +51,16 @@ class PaymentMethod(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.name}"
+    
+class Category(models.Model):
+    category_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)  # Link to User
+    name = models.CharField(max_length=100)  # Category Name (e.g., Food, Rent, Shopping)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'name'], name='unique_user_category')
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"

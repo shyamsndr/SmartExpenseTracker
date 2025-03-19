@@ -18,9 +18,9 @@
             <div class="input-group">
                 <select class="form-select" id="category" required>
                     <option value="" selected>Select Category</option>
-                    <option>Food</option>
-                    <option>Shopping</option>
-                    <option>Travel</option>
+                    {% for category in categories %}
+                    <option>{{ category.name }}</option>
+                    {% endfor %}
                 </select>
                 <a href="{% url 'manage_categories' %}" class="btn btn-secondary">Manage</a>
             </div>
@@ -32,9 +32,9 @@
             <div class="input-group">
                 <select class="form-select" id="payment_method" required>
                     <option value="" selected>Select Payment Method</option>
-                    <option>Cash</option>
-                    <option>Credit Card</option>
-                    <option>UPI</option>
+                    {% for method in methods %}
+                    <option>{{ method.name }}</option>
+                    {% endfor %}
                 </select>
                 <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage</a>
             </div>

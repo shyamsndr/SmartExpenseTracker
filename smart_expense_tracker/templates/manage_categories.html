@@ -8,22 +8,22 @@
         <h1 class="h3 mb-3">Manage Categories</h1>
 
         <!-- Add New Category -->
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Enter new category" required>
-            <button class="btn btn-primary">Add</button>
-        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="input-group mb-3">
+                <input type="text" name="category_name" class="form-control" placeholder="Enter new category" required>
+                <button class="btn btn-primary" type="submit">Add</button>
+            </div>
+        </form>
 
         <!-- Categories List -->
         <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                Food <button class="btn btn-danger btn-sm">Delete</button>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                Shopping <button class="btn btn-danger btn-sm">Delete</button>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                Travel <button class="btn btn-danger btn-sm">Delete</button>
-            </li>
+            {% for category in categories %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ category.name }}
+                    <a href="{% url 'delete_category' category_id=category.category_id %}" class="btn btn-danger btn-sm">Delete</a>
+                </li>
+            {% endfor %}
         </ul>
 
         <!-- Buttons to navigate to income & expense pages -->
@@ -33,4 +33,13 @@
         </div>
     </div>
 </div>
+
+{% if messages %}
+{% for message in messages %}
+    <script>
+        alert("{{ message }}");
+    </script>
+{% endfor %}
+{% endif %}
+
 {% endblock %}
