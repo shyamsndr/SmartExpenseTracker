@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense
+from django.db.models import Q
 from itertools import chain
 from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
@@ -111,6 +112,11 @@ def logout_view(request):
     messages.success(request, "Logged out successfully!")
     return redirect('login')
 
+from itertools import chain
+from operator import attrgetter
+from django.db.models import Q
+from django.shortcuts import render
+
 def transactions_view(request):
     query = request.GET.get('q', '').strip()
     user = request.user
@@ -122,23 +128,17 @@ def transactions_view(request):
     # Apply search filter if query exists
     if query:
         incomes = incomes.filter(
-            source__name__icontains=query
-        ) | incomes.filter(
-            payment_method__icontains=query
-        ) | incomes.filter(
-            date__icontains=query
-        ) | incomes.filter(
-            description__icontains=query
+            Q(source__name__icontains=query) |
+            Q(payment_method__name__icontains=query) |  # Fixed ForeignKey lookup
+            Q(date__icontains=query) |
+            Q(description__icontains=query)
         )
 
         expenses = expenses.filter(
-            category__name__icontains=query
-        ) | expenses.filter(
-            payment_method__name__icontains=query
-        ) | expenses.filter(
-            date__icontains=query
-        ) | expenses.filter(
-            description__icontains=query
+            Q(category__name__icontains=query) |
+            Q(payment_method__name__icontains=query) |  # Fixed ForeignKey lookup
+            Q(date__icontains=query) |
+            Q(description__icontains=query)
         )
 
     # Merge and sort transactions
@@ -148,15 +148,21 @@ def transactions_view(request):
         reverse=True
     )
 
-    # Convert expenses to negative values (optional, only if needed)
+    # Assign a common transaction_id for both Income and Expense
+    for transaction in transactions:
+        transaction.transaction_id = (
+            transaction.income_id if isinstance(transaction, Income) else transaction.expense_id
+        )
+
+    # Convert expenses to negative values (optional)
     for transaction in transactions:
         if isinstance(transaction, Expense):
-            transaction.amount = -transaction.amount  # Make expense negative
+            transaction.amount = -transaction.amount
 
     # Calculate Summary
     total_income = sum(income.amount for income in incomes)
     total_expense = sum(expense.amount for expense in expenses)
-    total_balance = total_income + total_expense
+    total_balance = total_income + total_expense  # Fixed: expenses are negative
 
     return render(request, 'transactions.html', {
         'transactions': transactions,
@@ -164,6 +170,36 @@ def transactions_view(request):
         'total_expense': total_expense,
         'total_balance': total_balance
     })
+
+def edit_transaction(request, transaction_id):
+    # Try to fetch the transaction using the provided transaction_id
+    try:
+        transaction = Income.objects.get(income_id=transaction_id, user=request.user)
+    except Income.DoesNotExist:
+        transaction = Expense.objects.get(expense_id=transaction_id, user=request.user)
+
+    if request.method == 'POST':
+        # Update the transaction with the form data
+        transaction.description = request.POST.get('description', transaction.description)
+        transaction.amount = float(request.POST.get('amount', transaction.amount))
+        transaction.save()
+        return redirect('transactions')
+
+    return render(request, 'edit_transaction.html', {'transaction': transaction})
+
+def delete_transaction(request, transaction_id):
+    # Try to fetch the transaction using the provided transaction_id
+    try:
+        transaction = Income.objects.get(income_id=transaction_id, user=request.user)
+    except Income.DoesNotExist:
+        transaction = Expense.objects.get(expense_id=transaction_id, user=request.user)
+
+    if request.method == 'POST':
+        # Delete the transaction
+        transaction.delete()
+        return redirect('transactions')
+
+    return render(request, 'delete_transaction.html', {'transaction': transaction})
 
 def expense_page(request):
     if 'user_id' not in request.session:

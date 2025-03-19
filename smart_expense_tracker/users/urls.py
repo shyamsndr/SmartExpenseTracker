@@ -23,4 +23,6 @@ urlpatterns = [
     path('delete-payment-method/<int:method_id>/', views.delete_payment_method_view, name='delete_payment_method'),
     path('delete-category/<int:category_id>/', views.delete_category_view, name='delete_category'),
     path('add-expense/', views.add_expense_view, name='add_expense'),
+    path('edit_transaction/<int:transaction_id>/', views.edit_transaction, name='edit_transaction'),
+    path('delete_transaction/<int:transaction_id>/', views.delete_transaction, name='delete_transaction'),
 ]

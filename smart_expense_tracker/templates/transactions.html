@@ -29,23 +29,26 @@
                 <tr>
                     <th>Date</th>
                     <th>Time</th>
-                    <th>Category</th>
                     <th>Description</th>
                     <th>Payment Method</th> 
                     <th>Income</th>
                     <th>Expense</th>
+                    <th>Action</th>  <!-- Added Action column -->
                 </tr>
-            </thead>
+            </thead>            
             <tbody>
                 {% for transaction in transactions %}
                 <tr>
                     <td>{{ transaction.date }}</td>
                     <td>{{ transaction.time }}</td>
-                    <td>{{ transaction.category.name }}</td>
                     <td>{{ transaction.description }}</td>
                     <td>{{ transaction.payment_method.name }}</td> 
                     <td class="text-success">{% if transaction.amount > 0 %}{{ transaction.amount }}{% else %}0{% endif %}</td>
                     <td class="text-danger">{% if transaction.amount < 0 %}{{ transaction.amount|floatformat:2|slice:"1:" }}{% else %}0{% endif %}</td>
+                    <td>
+                        <a href="{% url 'edit_transaction' transaction.transaction_id %}" class="btn btn-primary">Edit</a>
+                        <a href="{% url 'delete_transaction' transaction.transaction_id %}" class="btn btn-danger">Delete</a>
+                    </td>                    
                 </tr>
                 {% empty %}
                 <tr>
