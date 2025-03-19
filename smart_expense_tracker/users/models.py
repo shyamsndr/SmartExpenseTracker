@@ -38,3 +38,16 @@ class Income(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.amount}"
+    
+class PaymentMethod(models.Model):
+    method_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to User
+    name = models.CharField(max_length=255)  # Payment method name (Cash, UPI, etc.)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'name'], name='unique_user_payment_method')
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"

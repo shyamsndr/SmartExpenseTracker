@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User
-from .services import authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source, delete_income_source, add_income
+from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
+                        delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method)
 
 def login_view(request):
     if request.method == "POST":
@@ -111,7 +112,28 @@ def manage_categories_page(request):
     return render(request, "manage_categories.html")
 
 def manage_payment_methods_page(request):
-    return render(request, "manage_payment_methods.html")
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(u_id=request.session['user_id'])
+
+    if request.method == "POST":
+        method_name = request.POST.get('method_name')
+        success, message = add_payment_method(user, method_name)
+        messages.success(request, message) if success else messages.error(request, message)
+        return redirect('manage_payment_methods')
+
+    methods = get_payment_methods(user)
+    return render(request, "manage_payment_methods.html", {"methods": methods})
+
+def delete_payment_method_view(request, method_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(u_id=request.session['user_id'])
+    success, message = delete_payment_method(user, method_id)
+    messages.success(request, message) if success else messages.error(request, message)
+    return redirect('manage_payment_methods')
 
 def manage_source_of_income(request):
     if 'user_id' not in request.session:

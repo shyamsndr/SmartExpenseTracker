@@ -1,4 +1,4 @@
-from .models import User, SourceOfIncome, Income
+from .models import User, SourceOfIncome, Income, PaymentMethod
 from django.contrib.auth.hashers import make_password, check_password
 
 def authenticate_user(email, password):
@@ -102,3 +102,25 @@ def add_income(user, source_id, amount, payment_method, description, date, time)
         return False, "Invalid source of income."
     except Exception as e:
         return False, str(e)
+    
+#manage payment methods
+def get_payment_methods(user):
+    """Fetch all payment methods for a user."""
+    return PaymentMethod.objects.filter(user=user)
+
+def add_payment_method(user, name):
+    """Add a new payment method if it doesn't already exist."""
+    if PaymentMethod.objects.filter(user=user, name=name).exists():
+        return False, "Payment method already exists."
+
+    PaymentMethod.objects.create(user=user, name=name)
+    return True, "Payment method added successfully."
+
+def delete_payment_method(user, method_id):
+    """Delete a payment method if the user owns it."""
+    try:
+        method = PaymentMethod.objects.get(user=user, method_id=method_id)
+        method.delete()
+        return True, "Payment method deleted successfully."
+    except PaymentMethod.DoesNotExist:
+        return False, "Payment method not found."
