@@ -24,20 +24,6 @@ class SourceOfIncome(models.Model):
 
     def __str__(self):
         return self.name
-
-class Income(models.Model):
-    income_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to User
-    source = models.ForeignKey(SourceOfIncome, on_delete=models.CASCADE)  # Link to Source
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Store amount properly
-    payment_method = models.CharField(max_length=50)  # Cash, UPI, etc.
-    description = models.TextField(blank=True, null=True)  # Optional Description
-    date = models.DateField()  # Store Date
-    time = models.TimeField()  # Store Time
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically add timestamp
-
-    def __str__(self):
-        return f"{self.user.email} - {self.amount}"
     
 class PaymentMethod(models.Model):
     method_id = models.AutoField(primary_key=True)
@@ -64,6 +50,20 @@ class Category(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.name}"
+    
+class Income(models.Model):
+    income_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to User
+    source = models.ForeignKey(SourceOfIncome, on_delete=models.CASCADE)  # Link to Source
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Store amount properly
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)  # Cash, UPI, etc.
+    description = models.TextField(blank=True, null=True)  # Optional Description
+    date = models.DateField()  # Store Date
+    time = models.TimeField()  # Store Time
+    created_at = models.DateTimeField(auto_now_add=True)  # Automatically add timestamp
+
+    def __str__(self):
+        return f"{self.user.email} - {self.amount}"
     
 class Expense(models.Model):
     expense_id = models.AutoField(primary_key=True)

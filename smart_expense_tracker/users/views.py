@@ -3,6 +3,7 @@ from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense
 from itertools import chain
 from operator import attrgetter
+from django.http import HttpResponse
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
@@ -156,7 +157,7 @@ def transactions_view(request):
     # Calculate Summary
     total_income = sum(income.amount for income in incomes)
     total_expense = sum(expense.amount for expense in expenses)
-    total_balance = total_income - total_expense
+    total_balance = total_income + total_expense
 
     return render(request, 'transactions.html', {
         'transactions': transactions,

@@ -31,6 +31,7 @@
                     <th>Time</th>
                     <th>Category</th>
                     <th>Description</th>
+                    <th>Payment Method</th> 
                     <th>Income</th>
                     <th>Expense</th>
                 </tr>
@@ -42,12 +43,13 @@
                     <td>{{ transaction.time }}</td>
                     <td>{{ transaction.category.name }}</td>
                     <td>{{ transaction.description }}</td>
+                    <td>{{ transaction.payment_method.name }}</td> 
                     <td class="text-success">{% if transaction.amount > 0 %}{{ transaction.amount }}{% else %}0{% endif %}</td>
                     <td class="text-danger">{% if transaction.amount < 0 %}{{ transaction.amount|floatformat:2|slice:"1:" }}{% else %}0{% endif %}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center">No transactions found.</td>
+                    <td colspan="7" class="text-center">No transactions found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
