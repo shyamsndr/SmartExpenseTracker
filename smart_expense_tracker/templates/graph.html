@@ -6,49 +6,20 @@
 <main class="content">
     <div class="container-fluid p-0">
         <div class="mb-3">
-            <h1 class="h3 d-inline align-middle">Expense & Income Analysis</h1>
+            <h1 class="h3 d-inline align-middle">Income & Expense Analysis</h1>
         </div>
         <div class="row">
-            <!-- Line Chart -->
+            <!-- Donut Chart -->
             <div class="col-12 col-lg-6">
                 <div class="card flex-fill w-100">
                     <div class="card-header">
-                        <h5 class="card-title">Expense & Income Trend</h5>
-                        <h6 class="card-subtitle text-muted">Track how your expenses and income change over time.</h6>
+                        <h5 class="card-title">Income vs Expense Analysis</h5>
+                        <h6 class="card-subtitle text-muted">Visual representation of your income and expenses by category.</h6>
                     </div>
                     <div class="card-body">
                         <div class="chart">
-                            <canvas id="chartjs-line"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bar Chart -->
-            <div class="col-12 col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Category-wise Spending</h5>
-                        <h6 class="card-subtitle text-muted">Compare expenses across different categories.</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart">
-                            <canvas id="chartjs-bar"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pie Chart -->
-            <div class="col-12 col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Expense Distribution</h5>
-                        <h6 class="card-subtitle text-muted">See the percentage breakdown of your expenses.</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart chart-sm">
-                            <canvas id="chartjs-pie"></canvas>
+                            <!-- Plotly Chart -->
+                            {{ graph_html|safe }}
                         </div>
                     </div>
                 </div>

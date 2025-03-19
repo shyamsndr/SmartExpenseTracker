@@ -1,7 +1,12 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense
 from django.db.models import Q
+from django.db import models
+import plotly.express as px
+import plotly.graph_objs as go
+from plotly.offline import plot
+from django.contrib import messages
 from itertools import chain
 from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
@@ -111,11 +116,6 @@ def logout_view(request):
     request.session.flush()
     messages.success(request, "Logged out successfully!")
     return redirect('login')
-
-from itertools import chain
-from operator import attrgetter
-from django.db.models import Q
-from django.shortcuts import render
 
 def transactions_view(request):
     query = request.GET.get('q', '').strip()
@@ -314,7 +314,57 @@ def budget_management(request):
     return render(request, 'budget_management.html')
 
 def graph_view(request):
-    return render(request, 'graph.html')
+    try:
+        # Fetch the current user from the session
+        user_id = request.session.get('user_id')  # Assuming 'user_id' is stored in session
+        
+        if not user_id:
+            messages.error(request, "No user found in session!")
+            return render(request, 'graph.html')
+
+        # Fetch the user object
+        user = User.objects.get(u_id=user_id)
+
+        # Get income and expense data for the current user
+        income_data = Income.objects.filter(user=user)
+        expense_data = Expense.objects.filter(user=user)
+
+        # Summing income and expenses by category
+        income_by_category = income_data.values('source__name').annotate(total_income=models.Sum('amount'))
+        expense_by_category = expense_data.values('category__name').annotate(total_expense=models.Sum('amount'))
+
+        # Prepare data for the donut chart
+        income_labels = [item['source__name'] for item in income_by_category]
+        expense_labels = [item['category__name'] for item in expense_by_category]
+
+        # Combine income and expense labels and amounts
+        labels = income_labels + expense_labels
+        values = [item['total_income'] for item in income_by_category] + [item['total_expense'] for item in expense_by_category]
+
+        # Create a Plotly Donut Chart
+        trace = go.Pie(
+            labels=labels,
+            values=values,
+            hole=0.4,  # Makes it a donut chart
+            textinfo='percent+label',
+            marker=dict(colors=['#008000', '#FF0000', '#00FF00', '#0000FF', '#FF00FF'])  # Customize colors
+        )
+
+        layout = go.Layout(
+            title='Income vs Expense Analysis',
+            showlegend=True
+        )
+
+        # Generate the graph's HTML
+        graph_figure = go.Figure(data=[trace], layout=layout)
+        graph_html = plot(graph_figure, output_type='div')
+
+        # Render the template with the graph
+        return render(request, 'graph.html', {'graph_html': graph_html})
+    
+    except Exception as e:
+        messages.error(request, f"Error occurred: {str(e)}")
+        return render(request, 'graph.html')
 
 def export_pdf(request):
     """Renders the export page with the download button."""
