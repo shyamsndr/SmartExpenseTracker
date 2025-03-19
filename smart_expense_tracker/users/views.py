@@ -6,7 +6,7 @@ from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
-                        add_expense, export_transactions_to_csv)
+                        add_expense, export_transactions_to_csv, generate_transactions_pdf)
 
 def base_view(request):
     user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
@@ -281,7 +281,15 @@ def graph_view(request):
     return render(request, 'graph.html')
 
 def export_pdf(request):
+    """Renders the export page with the download button."""
     return render(request, 'export_pdf.html')
+
+def download_pdf(request):
+    """Handles the PDF download request."""
+    if 'user_id' not in request.session:  # Ensure session-based authentication
+        return redirect('login')  # Redirect if user is not authenticated
+
+    return generate_transactions_pdf(request.session['user_id']) 
 
 def export_csv(request):
     """Renders the export page with the download button."""

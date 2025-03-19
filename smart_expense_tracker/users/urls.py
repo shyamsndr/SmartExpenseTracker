@@ -15,6 +15,7 @@ urlpatterns = [
     path('budget/', views.budget_management, name='budget_management'),
     path('graph/', views.graph_view, name='graph'),
     path('export_pdf/', views.export_pdf, name='export_pdf'),
+    path('download_pdf/', views.download_pdf, name='download_pdf'),
     path('export_csv/', views.export_csv, name='export_csv'),
     path('download_csv/', views.download_csv, name='download_csv'),
     path('profile/', views.profile_view, name='profile'),

@@ -1,6 +1,8 @@
 from .models import User, SourceOfIncome, Income, PaymentMethod, Category, Expense
 from django.contrib.auth.hashers import make_password, check_password
 import csv
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from django.http import HttpResponse
 
 def authenticate_user(email, password):
@@ -205,4 +207,55 @@ def export_transactions_to_csv(user):
             income.source  # Assuming 'source' is the category for income
         ])
 
+    return response
+
+def generate_transactions_pdf(user_id):
+    """Generates a user-friendly PDF with categorized income and expenses."""
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transactions.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+    y_position = height - 50  # Start position
+
+    # Title
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, y_position, "Transactions Report")
+    y_position -= 30
+
+    # Draw Expenses
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "🛒 Expenses:")
+    y_position -= 20
+
+    expenses = Expense.objects.filter(user_id=user_id)  # Filter based on user
+    for expense in expenses:
+        p.setFont("Helvetica", 10)
+        text = f"{expense.date} | {expense.description} | ₹{expense.amount} | {expense.category} | {expense.payment_method}"
+        p.drawString(50, y_position, text)
+        y_position -= 15
+
+        if y_position < 50:  # Avoid going out of page
+            p.showPage()
+            y_position = height - 50
+
+    # Draw Income
+    y_position -= 20
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "💰 Income:")
+    y_position -= 20
+
+    incomes = Income.objects.filter(user_id=user_id)  # Filter based on user
+    for income in incomes:
+        p.setFont("Helvetica", 10)
+        text = f"{income.date} | {income.source} | ₹{income.amount} | {income.payment_method}"
+        p.drawString(50, y_position, text)
+        y_position -= 15
+
+        if y_position < 50:
+            p.showPage()
+            y_position = height - 50
+
+    p.showPage()
+    p.save()
     return response
