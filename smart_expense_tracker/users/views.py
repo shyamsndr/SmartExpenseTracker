@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import User, Category, PaymentMethod
+from .models import User, Category, PaymentMethod, Income, Expense
+from itertools import chain
+from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
@@ -110,7 +112,58 @@ def logout_view(request):
     return redirect('login')
 
 def transactions_view(request):
-    return render(request, 'transactions.html')
+    query = request.GET.get('q', '').strip()
+    user = request.user
+
+    # Fetch transactions for the user
+    incomes = Income.objects.filter(user=user)
+    expenses = Expense.objects.filter(user=user)
+
+    # Apply search filter if query exists
+    if query:
+        incomes = incomes.filter(
+            source__name__icontains=query
+        ) | incomes.filter(
+            payment_method__icontains=query
+        ) | incomes.filter(
+            date__icontains=query
+        ) | incomes.filter(
+            description__icontains=query
+        )
+
+        expenses = expenses.filter(
+            category__name__icontains=query
+        ) | expenses.filter(
+            payment_method__name__icontains=query
+        ) | expenses.filter(
+            date__icontains=query
+        ) | expenses.filter(
+            description__icontains=query
+        )
+
+    # Merge and sort transactions
+    transactions = sorted(
+        chain(incomes, expenses),
+        key=attrgetter('date', 'time'),
+        reverse=True
+    )
+
+    # Convert expenses to negative values (optional, only if needed)
+    for transaction in transactions:
+        if isinstance(transaction, Expense):
+            transaction.amount = -transaction.amount  # Make expense negative
+
+    # Calculate Summary
+    total_income = sum(income.amount for income in incomes)
+    total_expense = sum(expense.amount for expense in expenses)
+    total_balance = total_income - total_expense
+
+    return render(request, 'transactions.html', {
+        'transactions': transactions,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_balance': total_balance
+    })
 
 def expense_page(request):
     if 'user_id' not in request.session:
