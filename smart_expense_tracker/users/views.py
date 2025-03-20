@@ -217,6 +217,7 @@ def expense_page(request):
 
     return render(request, 'expense.html', {'categories': categories, 'methods': methods})
 
+
 def add_expense_view(request):
     if 'user_id' not in request.session:
         messages.error(request, "You must be logged in!")
@@ -236,9 +237,18 @@ def add_expense_view(request):
 
         category = Category.objects.get(user=user, category_id=category_id)
 
-        # **Budget Limit Check**
-        total_spent = Expense.objects.filter(user=user, category=category).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
-        budget = Budget.objects.filter(user=user, category=category).first()
+        # **Get month and year of the expense**
+        expense_date = datetime.strptime(date, "%Y-%m-%d")
+        expense_month, expense_year = expense_date.month, expense_date.year
+
+        # **Filter budget for the expense's month**
+        budget = Budget.objects.filter(user=user, category=category, month=expense_month, year=expense_year).first()
+
+        # **Calculate total spent for this category in the same month**
+        total_spent = Expense.objects.filter(
+            user=user, category=category,
+            date__year=expense_year, date__month=expense_month
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
 
         success, message = add_expense(user, category_id, amount, payment_method_id, description, date, time)
 
@@ -337,6 +347,8 @@ def budget_management(request):
     if request.method == "POST":
         category_id = request.POST.get("category")
         limit = request.POST.get("limit")
+        current_date = datetime.now()
+        month, year = current_date.month, current_date.year  # Get current month and year
 
         if not category_id or not limit:
             messages.error(request, "Please enter all required fields.")
@@ -344,18 +356,19 @@ def budget_management(request):
 
         category = Category.objects.get(category_id=category_id, user=user)
         
-        # Create or update budget
+        # Create or update budget for the **current month**
         budget, created = Budget.objects.update_or_create(
-            user=user, category=category,
+            user=user, category=category, month=month, year=year,
             defaults={"limit": limit}
         )
 
-        messages.success(request, f"Budget for {category.name} set to ₹{limit}")
+        messages.success(request, f"Budget for {category.name} set to ₹{limit} for {month}/{year}")
         return redirect("budget_management")
 
-    # Fetch user's categories and budgets
+    # Fetch budgets for the **current month only**
+    current_date = datetime.now()
     categories = Category.objects.filter(user=user)
-    budgets = Budget.objects.filter(user=user)
+    budgets = Budget.objects.filter(user=user, month=current_date.month, year=current_date.year)
 
     return render(request, "budget_management.html", {"categories": categories, "budgets": budgets})
 

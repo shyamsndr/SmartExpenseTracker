@@ -6,6 +6,7 @@
 <div class="container mt-4">
     <div class="card p-4">
         <h1 class="h3 mb-3">Budget Management</h1>
+        <p>Setting a budget applies only for the current month.</p>
 
         <!-- Set Budget Form -->
         <form method="POST">
@@ -22,12 +23,10 @@
                     <a href="{% url 'manage_categories' %}" class="btn btn-secondary">Manage</a>
                 </div>
             </div>
-
             <div class="mb-3">
                 <label for="limit">Budget Limit (₹)</label>
                 <input type="number" class="form-control" id="limit" name="limit" required>
             </div>
-
             <button type="submit" class="btn btn-primary">Set Budget</button>
         </form>
 
@@ -35,13 +34,13 @@
         <ul class="list-group mt-4">
             {% for budget in budgets %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ budget.category.name }} - ₹{{ budget.limit }}
+                {{ budget.category.name }} - ₹{{ budget.limit }} ({{ budget.month }}/{{ budget.year }})
                 <span>
                     <a href="{% url 'delete_budget' budget.budget_id %}" class="btn btn-danger btn-sm">Delete</a>
                 </span>
             </li>
             {% empty %}
-            <li class="list-group-item text-muted">No budget limits set.</li>
+            <li class="list-group-item text-muted">No budget limits set for this month.</li>
             {% endfor %}
         </ul>
     </div>
