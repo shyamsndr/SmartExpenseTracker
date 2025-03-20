@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Budget Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">Budget Management</h1>
+
+        <!-- Set Budget Form -->
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="category">Category</label>
+                <div class="input-group">
+                    <select class="form-select" id="category" name="category" required>
+                        <option value="" selected>Select Category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.category_id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <a href="{% url 'manage_categories' %}" class="btn btn-secondary">Manage</a>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="limit">Budget Limit (₹)</label>
+                <input type="number" class="form-control" id="limit" name="limit" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Set Budget</button>
+        </form>
+
+        <!-- Budget Limits List -->
+        <ul class="list-group mt-4">
+            {% for budget in budgets %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ budget.category.name }} - ₹{{ budget.limit }}
+                <span>
+                    <a href="{% url 'delete_budget' budget.budget_id %}" class="btn btn-danger btn-sm">Delete</a>
+                </span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">No budget limits set.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <script>
+            alert("{{ message }}");
+        </script>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

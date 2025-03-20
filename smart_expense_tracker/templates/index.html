@@ -1,8 +1,71 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - Smart Expense Tracker{% endblock %}
+{% block title %}Expenzo - Add Income{% endblock %}
 
 {% block content %}
-<h1>Welcome to the Dashboard</h1>
-<p>Your expense tracking starts here.</p>
+<div class="container mt-4">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">Add Income</h1>
+
+        <form method="POST" action="{% url 'index' %}">
+            {% csrf_token %}
+
+            <!-- Amount Input Field -->
+            <div class="mb-3">
+                <input type="number" class="form-control" name="amount" placeholder="Enter Amount" required>
+            </div>
+
+            <!-- Source of Income Dropdown -->
+            <div class="mb-3 d-flex align-items-center">
+                <select class="form-select me-2" name="source_of_income" required>
+                    <option value="" selected>Select Source of Income</option>
+                    {% for source in sources %}
+                        <option value="{{ source.source_id }}">{{ source.name }}</option>
+                    {% endfor %}
+                </select>
+                <a href="{% url 'manage_source_of_income' %}" class="btn btn-secondary">Manage Sources</a>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="mb-3 d-flex align-items-center">
+                <select class="form-select me-2" name="payment_method" required>
+                    <option value="" selected>Select Payment Method</option>
+                    {% for method in methods %}
+                        <option value="{{ method.method_id }}">{{ method.name }}</option>
+                    {% endfor %}
+                </select>
+                <a href="{% url 'manage_payment_methods' %}" class="btn btn-secondary">Manage Payment Methods</a>
+            </div>
+
+            <!-- Description Field -->
+            <div class="mb-3">
+                <textarea class="form-control" rows="2" name="description" placeholder="Enter Description"></textarea>
+            </div>
+
+            <!-- Date & Time Fields -->
+            <div class="mb-3">
+                <label for="date">Date</label>
+                <input type="date" class="form-control" name="date" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="time">Time</label>
+                <input type="time" class="form-control" name="time" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success w-100">Submit Income</button>
+            </div>
+        </form>
+
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    alert("{{ message }}");
+                </script>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
