@@ -13,6 +13,7 @@ urlpatterns = [
     path('manage-source-of-income/', views.manage_source_of_income, name='manage_source_of_income'),
     path('delete-source/<int:source_id>/', views.delete_source_of_income, name='delete_source_of_income'),
     path('budget/', views.budget_management, name='budget_management'),
+    path('budget/delete/<int:budget_id>/', views.delete_budget, name='delete_budget'),
     path('graph/', views.graph_view, name='graph'),
     path('export_pdf/', views.export_pdf, name='export_pdf'),
     path('download_pdf/', views.download_pdf, name='download_pdf'),

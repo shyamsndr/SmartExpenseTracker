@@ -51,6 +51,20 @@ class Category(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.name}"
     
+class Budget(models.Model):
+    budget_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to User
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)  # Link to Category
+    limit = models.DecimalField(max_digits=10, decimal_places=2)  # Budget Limit Amount
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'category'], name='unique_user_category_budget')
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.category.name} - ₹{self.limit}"
+    
 class Income(models.Model):
     income_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to User

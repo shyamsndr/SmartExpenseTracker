@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import User, Category, PaymentMethod, Income, Expense
+from .models import User, Category, PaymentMethod, Income, Expense, Budget
+from django.db.models import Sum
+from decimal import Decimal
 from django.db.models import Q
 from django.db import models
 import plotly.express as px
@@ -215,21 +217,33 @@ def expense_page(request):
 
 def add_expense_view(request):
     if 'user_id' not in request.session:
-        return redirect('login')  # Redirect to login if user is not authenticated
+        messages.error(request, "You must be logged in!")
+        return redirect('login')
 
     user = User.objects.get(u_id=request.session['user_id'])
-    categories = Category.objects.filter(user=user)  # Fetch user's categories
-    methods = PaymentMethod.objects.filter(user=user)  # Fetch user's payment methods
+    categories = Category.objects.filter(user=user)  
+    methods = PaymentMethod.objects.filter(user=user)  
 
     if request.method == "POST":
-        amount = request.POST.get('amount')
+        amount = Decimal(request.POST.get('amount'))
         category_id = request.POST.get('category')
         payment_method_id = request.POST.get('payment_method')
         description = request.POST.get('description')
         date = request.POST.get('date')
         time = request.POST.get('time')
 
+        category = Category.objects.get(user=user, category_id=category_id)
+
+        # **Budget Limit Check**
+        total_spent = Expense.objects.filter(user=user, category=category).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
+        budget = Budget.objects.filter(user=user, category=category).first()
+
         success, message = add_expense(user, category_id, amount, payment_method_id, description, date, time)
+
+        # **Show Budget Warning But Allow Expense Entry**
+        if budget and (total_spent + amount) > budget.limit:
+            messages.warning(request, f"Warning: Budget exceeded for {category.name}! (Limit: ₹{budget.limit})")
+
         messages.success(request, message) if success else messages.error(request, message)
 
         return redirect('add_expense')
@@ -311,7 +325,43 @@ def delete_source_of_income(request, source_id):
     return redirect('manage_source_of_income')
 
 def budget_management(request):
-    return render(request, 'budget_management.html')
+    user_id = request.session.get('user_id')  # Get logged-in user ID from session
+    if not user_id:
+        messages.error(request, "You must be logged in!")
+        return redirect('login')
+
+    user = User.objects.get(u_id=user_id)
+
+    if request.method == "POST":
+        category_id = request.POST.get("category")
+        limit = request.POST.get("limit")
+
+        if not category_id or not limit:
+            messages.error(request, "Please enter all required fields.")
+            return redirect("budget_management")
+
+        category = Category.objects.get(category_id=category_id, user=user)
+        
+        # Create or update budget
+        budget, created = Budget.objects.update_or_create(
+            user=user, category=category,
+            defaults={"limit": limit}
+        )
+
+        messages.success(request, f"Budget for {category.name} set to ₹{limit}")
+        return redirect("budget_management")
+
+    # Fetch user's categories and budgets
+    categories = Category.objects.filter(user=user)
+    budgets = Budget.objects.filter(user=user)
+
+    return render(request, "budget_management.html", {"categories": categories, "budgets": budgets})
+
+def delete_budget(request, budget_id):
+    budget = Budget.objects.get(budget_id=budget_id)
+    budget.delete()
+    messages.success(request, "Budget removed successfully.")
+    return redirect("budget_management")
 
 def graph_view(request):
     try:
