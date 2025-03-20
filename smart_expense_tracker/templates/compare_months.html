@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Compare Two Months</h2>
+
+    <form method="GET" class="row g-3">
+        <div class="col-md-4">
+            <label for="year" class="form-label">Select Year:</label>
+            <select name="year" id="year" class="form-select" required>
+                {% for year in years %}
+                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="month1" class="form-label">First Month:</label>
+            <select name="month1" id="month1" class="form-select" required>
+                {% for month in months %}
+                <option value="{{ month.number }}" {% if month.number == month1 %}selected{% endif %}>{{ month.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="month2" class="form-label">Second Month:</label>
+            <select name="month2" id="month2" class="form-select" required>
+                {% for month in months %}
+                <option value="{{ month.number }}" {% if month.number == month2 %}selected{% endif %}>{{ month.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Compare</button>
+        </div>
+    </form>
+
+    {% if selected_year and month1_name and month2_name %}
+    <div class="mt-4">
+        <h4 class="text-center">Comparison for {{ selected_year }}</h4>
+        <table class="table table-bordered text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Month</th>
+                    <th>Total Income</th>
+                    <th>Total Expense</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ month1_name }}</td>
+                    <td>₹{{ income_month1 }}</td>
+                    <td>₹{{ expense_month1 }}</td>
+                    <td>₹{{ balance_month1 }}</td>
+                </tr>
+                <tr>
+                    <td>{{ month2_name }}</td>
+                    <td>₹{{ income_month2 }}</td>
+                    <td>₹{{ expense_month2 }}</td>
+                    <td>₹{{ balance_month2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

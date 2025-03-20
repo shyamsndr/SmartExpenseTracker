@@ -3,6 +3,8 @@ from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense, Budget
 from django.db.models import Sum
 from decimal import Decimal
+import calendar
+from datetime import datetime
 from django.db.models import Q
 from django.db import models
 import plotly.express as px
@@ -437,3 +439,128 @@ def download_csv(request):
         return redirect('login')  # Redirect if user is not authenticated
 
     return export_transactions_to_csv(request.session['user_id'])  # Pass session user ID
+
+def compare_months_view(request):
+    user = request.user  # Get the logged-in user
+
+    # Retrieve session data or set default values
+    selected_year = request.session.get('selected_year', str(datetime.now().year))
+    month1 = request.session.get('month1', '1')
+    month2 = request.session.get('month2', '2')
+
+    if request.method == "GET":
+        selected_year = request.GET.get('year', selected_year)
+        month1 = request.GET.get('month1', month1)
+        month2 = request.GET.get('month2', month2)
+
+        # Save selections in session
+        request.session['selected_year'] = selected_year
+        request.session['month1'] = month1
+        request.session['month2'] = month2
+
+    income_month1 = income_month2 = expense_month1 = expense_month2 = None
+    balance_month1 = balance_month2 = 0
+    month1_name = month2_name = ""
+
+    if selected_year and month1 and month2:
+        # Convert month numbers to names
+        month1_name = calendar.month_name[int(month1)]
+        month2_name = calendar.month_name[int(month2)]
+
+        # Get total income and expense for each selected month
+        income_month1 = Income.objects.filter(
+            user=user, date__year=selected_year, date__month=month1
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        income_month2 = Income.objects.filter(
+            user=user, date__year=selected_year, date__month=month2
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        expense_month1 = Expense.objects.filter(
+            user=user, date__year=selected_year, date__month=month1
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        expense_month2 = Expense.objects.filter(
+            user=user, date__year=selected_year, date__month=month2
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        # Calculate balance for each month
+        balance_month1 = income_month1 - expense_month1
+        balance_month2 = income_month2 - expense_month2
+
+    # Generate year and month choices
+    years = [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)]
+    months = [{"number": str(m), "name": calendar.month_name[m]} for m in range(1, 13)]
+
+    context = {
+        'selected_year': selected_year,
+        'month1': month1,
+        'month2': month2,
+        'month1_name': month1_name,
+        'month2_name': month2_name,
+        'income_month1': income_month1,
+        'income_month2': income_month2,
+        'expense_month1': expense_month1,
+        'expense_month2': expense_month2,
+        'balance_month1': balance_month1,
+        'balance_month2': balance_month2,
+        'years': years,
+        'months': months,
+    }
+    return render(request, 'compare_months.html', context)
+
+def compare_years_view(request):
+    user = request.user  # Get the logged-in user
+
+    # Retrieve session data or set default values
+    year1 = request.session.get('year1', str(datetime.now().year - 1))
+    year2 = request.session.get('year2', str(datetime.now().year))
+
+    if request.method == "GET":
+        year1 = request.GET.get('year1', year1)
+        year2 = request.GET.get('year2', year2)
+
+        # Save selections in session
+        request.session['year1'] = year1
+        request.session['year2'] = year2
+
+    income_year1 = income_year2 = expense_year1 = expense_year2 = None
+    balance_year1 = balance_year2 = 0
+
+    if year1 and year2:
+        # Get total income and expense for each selected year
+        income_year1 = Income.objects.filter(
+            user=user, date__year=year1
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        income_year2 = Income.objects.filter(
+            user=user, date__year=year2
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        expense_year1 = Expense.objects.filter(
+            user=user, date__year=year1
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        expense_year2 = Expense.objects.filter(
+            user=user, date__year=year2
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        # Calculate balance for each year
+        balance_year1 = income_year1 - expense_year1
+        balance_year2 = income_year2 - expense_year2
+
+    # Generate year choices
+    years = [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)]
+
+    context = {
+        'year1': year1,
+        'year2': year2,
+        'income_year1': income_year1,
+        'income_year2': income_year2,
+        'expense_year1': expense_year1,
+        'expense_year2': expense_year2,
+        'balance_year1': balance_year1,
+        'balance_year2': balance_year2,
+        'years': years,
+    }
+    return render(request, 'compare_years.html', context)

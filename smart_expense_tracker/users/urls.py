@@ -26,4 +26,6 @@ urlpatterns = [
     path('add-expense/', views.add_expense_view, name='add_expense'),
     path('edit_transaction/<int:transaction_id>/', views.edit_transaction, name='edit_transaction'),
     path('delete_transaction/<int:transaction_id>/', views.delete_transaction, name='delete_transaction'),
+    path('compare-months/', views.compare_months_view, name='compare_months'),
+    path('compare-years/', views.compare_years_view, name='compare_years'),
 ]
