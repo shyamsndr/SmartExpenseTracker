@@ -1,9 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense, Budget
 from django.db.models import Sum
 from decimal import Decimal
 import calendar
+from django.utils.timezone import now
 from datetime import datetime
 from django.db.models import Q
 from django.db import models
@@ -16,7 +17,8 @@ from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
-                        add_expense, export_transactions_to_csv, generate_transactions_pdf)
+                        add_expense, export_transactions_to_csv, generate_transactions_pdf, export_current_month_to_csv,
+                        generate_current_month_pdf)
 
 def base_view(request):
     user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
@@ -577,3 +579,113 @@ def compare_years_view(request):
         'years': years,
     }
     return render(request, 'compare_years.html', context)
+
+def current_month_transactions_view(request):
+    if not request.session.get('user_id'):
+        return redirect('login')  # Ensure session-based auth
+
+    query = request.GET.get('q', '').strip()
+    user = request.user
+    today = now()
+
+    # Fetch current month transactions
+    incomes = Income.objects.filter(user=user, date__year=today.year, date__month=today.month)
+    expenses = Expense.objects.filter(user=user, date__year=today.year, date__month=today.month)
+
+    # Apply search filter
+    if query:
+        incomes = incomes.filter(
+            Q(source__name__icontains=query) |
+            Q(payment_method__name__icontains=query) |
+            Q(date__icontains=query) |
+            Q(description__icontains=query)
+        )
+        expenses = expenses.filter(
+            Q(category__name__icontains=query) |
+            Q(payment_method__name__icontains=query) |
+            Q(date__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    # Merge transactions and sort by date and time
+    transactions = sorted(
+        chain(incomes, expenses),
+        key=attrgetter('date', 'time'),
+        reverse=True
+    )
+
+    for transaction in transactions:
+        transaction.transaction_id = (
+            transaction.income_id if isinstance(transaction, Income) else transaction.expense_id
+        )
+
+    for transaction in transactions:
+        if isinstance(transaction, Expense):
+            transaction.amount = -transaction.amount
+
+    # Calculate summary
+    total_income = incomes.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_balance = total_income - total_expense  # Expenses are negative
+
+    return render(request, 'current_month_transactions.html', {
+        'transactions': transactions,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_balance': total_balance
+    })
+
+def current_month_transaction_delete_view(request, transaction_id):
+    # Try to fetch the transaction using the provided transaction_id
+    try:
+        transaction = Income.objects.get(income_id=transaction_id, user=request.user)
+    except Income.DoesNotExist:
+        transaction = Expense.objects.get(expense_id=transaction_id, user=request.user)
+
+    if request.method == 'POST':
+        # Delete the transaction
+        transaction.delete()
+        return redirect('current_month_transactions')
+
+    return render(request, 'delete_transaction_months.html', {'transaction': transaction})
+
+def current_month_transaction_edit_view(request, transaction_id):
+    # Try to fetch the transaction using the provided transaction_id
+    try:
+        transaction = Income.objects.get(income_id=transaction_id, user=request.user)
+    except Income.DoesNotExist:
+        transaction = Expense.objects.get(expense_id=transaction_id, user=request.user)
+
+    if request.method == 'POST':
+        # Update the transaction with the form data
+        transaction.description = request.POST.get('description', transaction.description)
+        transaction.amount = float(request.POST.get('amount', transaction.amount))
+        transaction.save()
+        return redirect('current_month_transactions')
+
+    return render(request, 'edit_transaction_months.html', {'transaction': transaction})
+
+def current_month_graph(request):
+    return render(request, 'current_month_graph.html')
+
+def export_csv_month(request):
+    """Renders the export page with the download button for the current month."""
+    return render(request, 'export_csv_month.html')
+
+def download_csv_month(request):
+    """Handles the CSV download request for the current month."""
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    return export_current_month_to_csv(request.user)
+
+def export_pdf_month(request):
+    """Renders the export page with the download button for the current month."""
+    return render(request, 'export_pdf_month.html')
+
+def download_pdf_month(request):
+    """Handles the PDF download request for the current month."""
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    return generate_current_month_pdf(request.user.id)

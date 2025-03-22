@@ -1,6 +1,7 @@
 from .models import User, SourceOfIncome, Income, PaymentMethod, Category, Expense
 from django.contrib.auth.hashers import make_password, check_password
 import csv
+from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.http import HttpResponse
@@ -250,6 +251,78 @@ def generate_transactions_pdf(user_id):
         p.setFont("Helvetica", 10)
         text = f"{income.date} | {income.source} | ₹{income.amount} | {income.payment_method}"
         p.drawString(50, y_position, text)
+        y_position -= 15
+
+        if y_position < 50:
+            p.showPage()
+            y_position = height - 50
+
+    p.showPage()
+    p.save()
+    return response
+
+def export_current_month_to_csv(user):
+    """Generate a CSV file with only current month's income and expenses."""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="current_month_transactions.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Type', 'Description', 'Amount', 'Category'])
+
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+
+    expenses = Expense.objects.filter(user=user, date__month=current_month, date__year=current_year)
+    incomes = Income.objects.filter(user=user, date__month=current_month, date__year=current_year)
+
+    for expense in expenses:
+        writer.writerow([expense.date, 'Expense', expense.description, expense.amount, expense.category])
+
+    for income in incomes:
+        writer.writerow([income.date, 'Income', income.description, income.amount, income.source])
+
+    return response
+
+def generate_current_month_pdf(user_id):
+    """Generate a PDF report for only current month's transactions."""
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="current_month_transactions.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+    y_position = height - 50
+
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(180, y_position, "Current Month Transactions")
+    y_position -= 30
+
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+
+    expenses = Expense.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
+    incomes = Income.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "Expenses:")
+    y_position -= 20
+
+    for expense in expenses:
+        p.setFont("Helvetica", 10)
+        p.drawString(50, y_position, f"{expense.date} | {expense.description} | ₹{expense.amount} | {expense.category}")
+        y_position -= 15
+
+        if y_position < 50:
+            p.showPage()
+            y_position = height - 50
+
+    y_position -= 20
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "Income:")
+    y_position -= 20
+
+    for income in incomes:
+        p.setFont("Helvetica", 10)
+        p.drawString(50, y_position, f"{income.date} | {income.source} | ₹{income.amount}")
         y_position -= 15
 
         if y_position < 50:

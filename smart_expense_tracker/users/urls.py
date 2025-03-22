@@ -28,4 +28,11 @@ urlpatterns = [
     path('delete_transaction/<int:transaction_id>/', views.delete_transaction, name='delete_transaction'),
     path('compare-months/', views.compare_months_view, name='compare_months'),
     path('compare-years/', views.compare_years_view, name='compare_years'),
+    path('transactions/current-month/', views.current_month_transactions_view, name='current_month_transactions'),
+    path('current_month_transaction_edit/<int:transaction_id>/', views.current_month_transaction_edit_view, name='current_month_transaction_edit'),
+    path('current_month_transaction_delete/<int:transaction_id>/', views.current_month_transaction_delete_view, name='current_month_transaction_delete'),
+    path('export_csv_month/', views.export_csv_month, name='export_csv_month'),
+    path('download_csv_month/', views.download_csv_month, name='download_csv_month'),
+    path('export_pdf_month/', views.export_pdf_month, name='export_pdf_month'),
+    path('download_pdf_month/', views.download_pdf_month, name='download_pdf_month'),
 ]
