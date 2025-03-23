@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions - Expenzo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">This Month's Transaction History</h1>
+
+        <!-- Search Bar -->
+        <form method="GET" action="" class="row mb-3">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Search by date, category, or payment method" value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-4 text-end">
+                <button type="submit" class="btn btn-success">Search</button>
+            </div>
+        </form>
+
+        <!-- Export Buttons -->
+        <div class="mb-3 text-end">
+            <a href="{% url 'export_csv_month' %}" class="btn btn-outline-primary">Export CSV</a>
+            <a href="{% url 'export_pdf_month' %}" class="btn btn-outline-danger">Export PDF</a>
+        </div>
+
+        <!-- Transaction Table -->
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Description</th>
+                    <th>Payment Method</th> 
+                    <th>Income</th>
+                    <th>Expense</th>
+                    <th>Action</th> 
+                </tr>
+            </thead>            
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.date }}</td>
+                    <td>{{ transaction.time }}</td>
+                    <td>{{ transaction.description }}</td>
+                    <td>{{ transaction.payment_method.name }}</td>
+
+                    <td class="text-success">
+                        {% if transaction.amount > 0 %}{{ transaction.amount }}{% endif %}
+                    </td>
+                    <td class="text-danger">
+                        {% if transaction.amount < 0 %}{{ transaction.amount|floatformat:2 }}{% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'current_month_transaction_edit' transaction.transaction_id %}" class="btn btn-primary">Edit</a>
+                        <a href="{% url 'current_month_transaction_delete' transaction.transaction_id %}" class="btn btn-danger">Delete</a>
+                    </td>                   
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">No transactions found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Buttons -->
+        <div class="text-center mt-3">
+            <a href="{% url 'index' %}" class="btn btn-primary">Add New Transaction</a>
+            <a href="{% url 'current_month_graph' %}" class="btn btn-info">Chart</a>
+        </div>
+
+        <!-- Summary Table -->
+        <h3 class="mt-4">Summary</h3>
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Total Income</th>
+                    <th>Total Expense</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-success">{{ total_income }}</td>
+                    <td class="text-danger">{{ total_expense }}</td>
+                    <td class="text-primary">{{ total_balance }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

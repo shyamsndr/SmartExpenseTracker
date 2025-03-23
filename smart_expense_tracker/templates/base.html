@@ -30,7 +30,7 @@
 
 				<ul class="sidebar-nav">
 					<li class="sidebar-header">
-						Operations
+						Transactions
 					</li>
 
 					<li class="sidebar-item">
@@ -46,22 +46,58 @@
 					</li>
 
 					<li class="sidebar-item">
-						<a class="sidebar-link" href="{% url 'graph' %}">
-              <i class="align-middle" data-feather="pie-chart"></i> <span class="align-middle">Graph</span>
+						<a class="sidebar-link" href="{% url 'current_month_transactions' %}">
+              <i class="align-middle" data-feather="list"></i> <span class="align-middle">Transaction History</span>
             </a>
 					</li>
 
 					<li class="sidebar-item">
-						<a class="sidebar-link" href="{% url 'transactions' %}">
-              <i class="align-middle" data-feather="list"></i> <span class="align-middle">Table</span>
+						<a class="sidebar-link" href="{% url 'current_month_graph' %}">
+              <i class="align-middle" data-feather="pie-chart"></i> <span class="align-middle">Performance Graph</span>
             </a>
 					</li>
+
+					<li class="sidebar-item">
+						<li class="sidebar-header">Budgeting</li>
 
 					<li class="sidebar-item">
 						<a class="sidebar-link" href="{% url 'budget_management' %}">
-              <i class="align-middle" data-feather="book"></i> <span class="align-middle">Budget Management</span>
+              <i class="align-middle" data-feather="book"></i> <span class="align-middle">Set Budget</span>
             </a>
 					</li>
+
+					<li class="sidebar-item">
+						<li class="sidebar-header">Analysis</li>
+			
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'compare_months' %}">
+						  <i class="align-middle" data-feather="filter"></i> <span class="align-middle">Month Comparison</span>
+						</a>
+					  </li>
+				
+					  <li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'compare_years' %}">
+						  <i class="align-middle" data-feather="filter"></i> <span class="align-middle">Year Comparison</span>
+						</a>
+					  </li>
+
+					  <li class="sidebar-item">
+						<li class="sidebar-header">Transaction Overview</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'transactions' %}">
+              <i class="align-middle" data-feather="list"></i> <span class="align-middle">Transactions</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<a class="sidebar-link" href="{% url 'graph' %}">
+              <i class="align-middle" data-feather="pie-chart"></i> <span class="align-middle">Performance Graph</span>
+            </a>
+					</li>
+
+					<li class="sidebar-item">
+						<li class="sidebar-header">Settings</li>
 
 					<li class="sidebar-item">
 						<a class="sidebar-link" href="{% url 'manage_categories' %}">
@@ -82,21 +118,9 @@
 					</li>
 
 					<li class="sidebar-item">
-						<li class="sidebar-header">Account</li>
+						<li class="sidebar-header">Profile</li>
 						<a class="sidebar-link" href="{% url 'profile' %}">
-              <i class="align-middle" data-feather="user"></i> <span class="align-middle">Profile</span>
-            </a>
-					</li>
-
-					<li class="sidebar-item">
-						<a class="sidebar-link" href="{% url 'login' %}">
-              <i class="align-middle" data-feather="log-in"></i> <span class="align-middle">Sign In</span>
-            </a>
-					</li>
-
-					<li class="sidebar-item">
-						<a class="sidebar-link" href="{% url 'register' %}">
-              <i class="align-middle" data-feather="user-plus"></i> <span class="align-middle">Sign Up</span>
+              <i class="align-middle" data-feather="user"></i> <span class="align-middle">Account</span>
             </a>
 					</li>
 				</ul>

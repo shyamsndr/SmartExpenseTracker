@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Export CSV - Expenzo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4 text-center">
+        <h1 class="h3 mb-3">Export Transactions as CSV</h1>
+        <p>Click the button below to download your transactions in CSV format.</p>
+        <a href="{% url 'download_csv_month' %}" class="btn btn-primary">Download CSV</a>
+    </div>
+</div>
+{% endblock %}

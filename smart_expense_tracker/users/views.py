@@ -3,6 +3,9 @@ from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense, Budget
 from django.db.models import Sum
 from decimal import Decimal
+import calendar
+from django.utils.timezone import now
+from datetime import datetime
 from django.db.models import Q
 from django.db import models
 import plotly.express as px
@@ -14,7 +17,8 @@ from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
-                        add_expense, export_transactions_to_csv, generate_transactions_pdf)
+                        add_expense, export_transactions_to_csv, generate_transactions_pdf, export_current_month_transactions_to_csv, 
+                        generate_current_month_transactions_pdf)
 
 def base_view(request):
     user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
@@ -215,6 +219,7 @@ def expense_page(request):
 
     return render(request, 'expense.html', {'categories': categories, 'methods': methods})
 
+
 def add_expense_view(request):
     if 'user_id' not in request.session:
         messages.error(request, "You must be logged in!")
@@ -234,9 +239,18 @@ def add_expense_view(request):
 
         category = Category.objects.get(user=user, category_id=category_id)
 
-        # **Budget Limit Check**
-        total_spent = Expense.objects.filter(user=user, category=category).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
-        budget = Budget.objects.filter(user=user, category=category).first()
+        # **Get month and year of the expense**
+        expense_date = datetime.strptime(date, "%Y-%m-%d")
+        expense_month, expense_year = expense_date.month, expense_date.year
+
+        # **Filter budget for the expense's month**
+        budget = Budget.objects.filter(user=user, category=category, month=expense_month, year=expense_year).first()
+
+        # **Calculate total spent for this category in the same month**
+        total_spent = Expense.objects.filter(
+            user=user, category=category,
+            date__year=expense_year, date__month=expense_month
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
 
         success, message = add_expense(user, category_id, amount, payment_method_id, description, date, time)
 
@@ -335,6 +349,8 @@ def budget_management(request):
     if request.method == "POST":
         category_id = request.POST.get("category")
         limit = request.POST.get("limit")
+        current_date = datetime.now()
+        month, year = current_date.month, current_date.year  # Get current month and year
 
         if not category_id or not limit:
             messages.error(request, "Please enter all required fields.")
@@ -342,18 +358,19 @@ def budget_management(request):
 
         category = Category.objects.get(category_id=category_id, user=user)
         
-        # Create or update budget
+        # Create or update budget for the **current month**
         budget, created = Budget.objects.update_or_create(
-            user=user, category=category,
+            user=user, category=category, month=month, year=year,
             defaults={"limit": limit}
         )
 
-        messages.success(request, f"Budget for {category.name} set to ₹{limit}")
+        messages.success(request, f"Budget for {category.name} set to ₹{limit} for {month}/{year}")
         return redirect("budget_management")
 
-    # Fetch user's categories and budgets
+    # Fetch budgets for the **current month only**
+    current_date = datetime.now()
     categories = Category.objects.filter(user=user)
-    budgets = Budget.objects.filter(user=user)
+    budgets = Budget.objects.filter(user=user, month=current_date.month, year=current_date.year)
 
     return render(request, "budget_management.html", {"categories": categories, "budgets": budgets})
 
@@ -437,3 +454,282 @@ def download_csv(request):
         return redirect('login')  # Redirect if user is not authenticated
 
     return export_transactions_to_csv(request.session['user_id'])  # Pass session user ID
+
+def compare_months_view(request):
+    user = request.user  # Get the logged-in user
+
+    # Retrieve session data or set default values
+    selected_year = request.session.get('selected_year', str(datetime.now().year))
+    month1 = request.session.get('month1', '1')
+    month2 = request.session.get('month2', '2')
+
+    if request.method == "GET":
+        selected_year = request.GET.get('year', selected_year)
+        month1 = request.GET.get('month1', month1)
+        month2 = request.GET.get('month2', month2)
+
+        # Save selections in session
+        request.session['selected_year'] = selected_year
+        request.session['month1'] = month1
+        request.session['month2'] = month2
+
+    income_month1 = income_month2 = expense_month1 = expense_month2 = None
+    balance_month1 = balance_month2 = 0
+    month1_name = month2_name = ""
+
+    if selected_year and month1 and month2:
+        # Convert month numbers to names
+        month1_name = calendar.month_name[int(month1)]
+        month2_name = calendar.month_name[int(month2)]
+
+        # Get total income and expense for each selected month
+        income_month1 = Income.objects.filter(
+            user=user, date__year=selected_year, date__month=month1
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        income_month2 = Income.objects.filter(
+            user=user, date__year=selected_year, date__month=month2
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        expense_month1 = Expense.objects.filter(
+            user=user, date__year=selected_year, date__month=month1
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        expense_month2 = Expense.objects.filter(
+            user=user, date__year=selected_year, date__month=month2
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        # Calculate balance for each month
+        balance_month1 = income_month1 - expense_month1
+        balance_month2 = income_month2 - expense_month2
+
+    # Generate year and month choices
+    years = [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)]
+    months = [{"number": str(m), "name": calendar.month_name[m]} for m in range(1, 13)]
+
+    context = {
+        'selected_year': selected_year,
+        'month1': month1,
+        'month2': month2,
+        'month1_name': month1_name,
+        'month2_name': month2_name,
+        'income_month1': income_month1,
+        'income_month2': income_month2,
+        'expense_month1': expense_month1,
+        'expense_month2': expense_month2,
+        'balance_month1': balance_month1,
+        'balance_month2': balance_month2,
+        'years': years,
+        'months': months,
+    }
+    return render(request, 'compare_months.html', context)
+
+def compare_years_view(request):
+    user = request.user  # Get the logged-in user
+
+    # Retrieve session data or set default values
+    year1 = request.session.get('year1', str(datetime.now().year - 1))
+    year2 = request.session.get('year2', str(datetime.now().year))
+
+    if request.method == "GET":
+        year1 = request.GET.get('year1', year1)
+        year2 = request.GET.get('year2', year2)
+
+        # Save selections in session
+        request.session['year1'] = year1
+        request.session['year2'] = year2
+
+    income_year1 = income_year2 = expense_year1 = expense_year2 = None
+    balance_year1 = balance_year2 = 0
+
+    if year1 and year2:
+        # Get total income and expense for each selected year
+        income_year1 = Income.objects.filter(
+            user=user, date__year=year1
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        income_year2 = Income.objects.filter(
+            user=user, date__year=year2
+        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+
+        expense_year1 = Expense.objects.filter(
+            user=user, date__year=year1
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        expense_year2 = Expense.objects.filter(
+            user=user, date__year=year2
+        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+
+        # Calculate balance for each year
+        balance_year1 = income_year1 - expense_year1
+        balance_year2 = income_year2 - expense_year2
+
+    # Generate year choices
+    years = [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)]
+
+    context = {
+        'year1': year1,
+        'year2': year2,
+        'income_year1': income_year1,
+        'income_year2': income_year2,
+        'expense_year1': expense_year1,
+        'expense_year2': expense_year2,
+        'balance_year1': balance_year1,
+        'balance_year2': balance_year2,
+        'years': years,
+    }
+    return render(request, 'compare_years.html', context)
+
+def current_month_transactions_view(request):
+    if not request.session.get('user_id'):
+        return redirect('login')  # Ensure session-based auth
+
+    query = request.GET.get('q', '').strip()
+    user = request.user
+    today = now()
+
+    # Fetch current month transactions
+    incomes = Income.objects.filter(user=user, date__year=today.year, date__month=today.month)
+    expenses = Expense.objects.filter(user=user, date__year=today.year, date__month=today.month)
+
+    # Apply search filter
+    if query:
+        incomes = incomes.filter(
+            Q(source__name__icontains=query) |
+            Q(payment_method__name__icontains=query) |
+            Q(date__icontains=query) |
+            Q(description__icontains=query)
+        )
+        expenses = expenses.filter(
+            Q(category__name__icontains=query) |
+            Q(payment_method__name__icontains=query) |
+            Q(date__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    # Merge transactions and sort by date and time
+    transactions = sorted(
+        chain(incomes, expenses),
+        key=attrgetter('date', 'time'),
+        reverse=True
+    )
+
+    for transaction in transactions:
+        transaction.transaction_id = (
+            transaction.income_id if isinstance(transaction, Income) else transaction.expense_id
+        )
+
+    for transaction in transactions:
+        if isinstance(transaction, Expense):
+            transaction.amount = -transaction.amount
+
+    # Calculate summary
+    total_income = incomes.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_balance = total_income - total_expense  # Expenses are negative
+
+    return render(request, 'current_month_transactions.html', {
+        'transactions': transactions,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_balance': total_balance
+    })
+
+def current_month_transaction_delete_view(request, transaction_id):
+    # Try to fetch the transaction using the provided transaction_id
+    try:
+        transaction = Income.objects.get(income_id=transaction_id, user=request.user)
+    except Income.DoesNotExist:
+        transaction = Expense.objects.get(expense_id=transaction_id, user=request.user)
+
+    if request.method == 'POST':
+        # Delete the transaction
+        transaction.delete()
+        return redirect('current_month_transactions')
+
+    return render(request, 'delete_transaction_months.html', {'transaction': transaction})
+
+def current_month_transaction_edit_view(request, transaction_id):
+    # Try to fetch the transaction using the provided transaction_id
+    try:
+        transaction = Income.objects.get(income_id=transaction_id, user=request.user)
+    except Income.DoesNotExist:
+        transaction = Expense.objects.get(expense_id=transaction_id, user=request.user)
+
+    if request.method == 'POST':
+        # Update the transaction with the form data
+        transaction.description = request.POST.get('description', transaction.description)
+        transaction.amount = float(request.POST.get('amount', transaction.amount))
+        transaction.save()
+        return redirect('current_month_transactions')
+
+    return render(request, 'edit_transaction_months.html', {'transaction': transaction})
+
+def current_month_graph(request):
+    try:
+        user_id = request.session.get('user_id')  # Get logged-in user
+        if not user_id:
+            messages.error(request, "No user found in session!")
+            return render(request, 'current_month_graph.html')
+
+        user = User.objects.get(u_id=user_id)
+        today = now()
+        current_month = today.month
+        current_year = today.year
+
+        # Filter transactions for the current month
+        income_data = Income.objects.filter(user=user, date__month=current_month, date__year=current_year)
+        expense_data = Expense.objects.filter(user=user, date__month=current_month, date__year=current_year)
+
+        # Sum income by category
+        income_by_category = income_data.values('source__name').annotate(total_income=Sum('amount'))
+        expense_by_category = expense_data.values('category__name').annotate(total_expense=Sum('amount'))
+
+        # Prepare labels and values
+        categories = [item['source__name'] for item in income_by_category] + [item['category__name'] for item in expense_by_category]
+        values = [item['total_income'] for item in income_by_category] + [-item['total_expense'] for item in expense_by_category]  # Expenses as negative
+
+        # Plotly Bar Chart
+        trace = go.Bar(
+            x=categories,
+            y=values,
+            marker=dict(color=['#28a745' if val > 0 else '#dc3545' for val in values])  # Green for income, Red for expense
+        )
+
+        layout = go.Layout(
+            title=f'Income & Expense Analysis - {today.strftime("%B %Y")}',
+            xaxis=dict(title='Category'),
+            yaxis=dict(title='Amount'),
+            bargap=0.2
+        )
+
+        graph_figure = go.Figure(data=[trace], layout=layout)
+        graph_html = plot(graph_figure, output_type='div')
+
+        return render(request, 'current_month_graph.html', {'graph_html': graph_html})
+
+    except Exception as e:
+        messages.error(request, f"Error occurred: {str(e)}")
+        return render(request, 'current_month_graph.html')
+
+def export_csv_month(request):
+    """Renders the export page with the download button for current month transactions."""
+    return render(request, 'export_csv_month.html')
+
+def download_csv_month(request):
+    """Handles the CSV download request for the current month's transactions."""
+    if 'user_id' not in request.session:
+        return redirect('login')  # Redirect if user is not authenticated
+
+    return export_current_month_transactions_to_csv(request.session['user_id'])
+
+def export_pdf_month(request):
+    """Renders the export page with the download button for current month transactions."""
+    return render(request, 'export_pdf_month.html')
+
+def download_pdf_month(request):
+    """Handles the PDF download request for the current month's transactions."""
+    if 'user_id' not in request.session:
+        return redirect('login')  # Redirect if user is not authenticated
+
+    return generate_current_month_transactions_pdf(request.session['user_id'])

@@ -1,25 +1,24 @@
 {% extends 'base.html' %}
 
-{% block title %}All Transaction Graph - Expenzo{% endblock %}
+{% block title %}Current Month Transactions - Expenzo{% endblock %}
 
 {% block content %}
 <main class="content">
     <div class="container-fluid p-0">
         <div class="mb-3">
-            <h1 class="h3 d-inline align-middle">Income & Expense Analysis</h1>
+            <h1 class="h3 d-inline align-middle">Current Month Income & Expense Analysis</h1>
         </div>
         <div class="row">
-            <!-- Donut Chart -->
-            <div class="col-12 col-lg-6">
+            <!-- Bar Chart -->
+            <div class="col-12">
                 <div class="card flex-fill w-100">
                     <div class="card-header">
-                        <h5 class="card-title">Income vs Expense Analysis</h5>
-                        <h6 class="card-subtitle text-muted">Visual representation of your income and expenses by category.</h6>
+                        <h5 class="card-title">Income & Expense Breakdown</h5>
+                        <h6 class="card-subtitle text-muted">This chart displays income and expenses for the current month.</h6>
                     </div>
                     <div class="card-body">
                         <div class="chart">
-                            <!-- Plotly Chart -->
-                            {{ graph_html|safe }}
+                            {{ graph_html|safe }}  <!-- Ensure chart renders -->
                         </div>
                     </div>
                 </div>

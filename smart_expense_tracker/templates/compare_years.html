@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Compare Two Years - Expenzo</h2>
+
+    <form method="GET" class="row g-3">
+        <div class="col-md-6">
+            <label for="year1" class="form-label">Select First Year:</label>
+            <select name="year1" id="year1" class="form-select" required>
+                {% for year in years %}
+                <option value="{{ year }}" {% if year == year1 %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="year2" class="form-label">Select Second Year:</label>
+            <select name="year2" id="year2" class="form-select" required>
+                {% for year in years %}
+                <option value="{{ year }}" {% if year == year2 %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-12 d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">Compare</button>
+        </div>
+    </form>
+
+    {% if year1 and year2 %}
+    <div class="mt-4">
+        <h4 class="text-center">Comparison for {{ year1 }} vs {{ year2 }}</h4>
+        <table class="table table-bordered text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Year</th>
+                    <th>Total Income</th>
+                    <th>Total Expense</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ year1 }}</td>
+                    <td>₹{{ income_year1 }}</td>
+                    <td>₹{{ expense_year1 }}</td>
+                    <td>₹{{ balance_year1 }}</td>
+                </tr>
+                <tr>
+                    <td>{{ year2 }}</td>
+                    <td>₹{{ income_year2 }}</td>
+                    <td>₹{{ expense_year2 }}</td>
+                    <td>₹{{ balance_year2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

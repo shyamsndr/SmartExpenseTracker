@@ -1,6 +1,7 @@
 from .models import User, SourceOfIncome, Income, PaymentMethod, Category, Expense
 from django.contrib.auth.hashers import make_password, check_password
 import csv
+from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.http import HttpResponse
@@ -246,6 +247,101 @@ def generate_transactions_pdf(user_id):
     y_position -= 20
 
     incomes = Income.objects.filter(user_id=user_id)  # Filter based on user
+    for income in incomes:
+        p.setFont("Helvetica", 10)
+        text = f"{income.date} | {income.source} | ₹{income.amount} | {income.payment_method}"
+        p.drawString(50, y_position, text)
+        y_position -= 15
+
+        if y_position < 50:
+            p.showPage()
+            y_position = height - 50
+
+    p.showPage()
+    p.save()
+    return response
+
+def export_current_month_transactions_to_csv(user):
+    """Generate and return a CSV file with only the current month's income and expenses."""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="current_month_transactions.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Type', 'Description', 'Amount', 'Category'])
+
+    # Get current month and year
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
+
+    # Fetch both expenses and incomes for the current month
+    expenses = Expense.objects.filter(user=user, date__month=current_month, date__year=current_year)
+    incomes = Income.objects.filter(user=user, date__month=current_month, date__year=current_year)
+
+    # Write expense data
+    for expense in expenses:
+        writer.writerow([
+            expense.date.strftime('%Y-%m-%d'),
+            'Expense',
+            expense.description,
+            expense.amount,
+            expense.category
+        ])
+
+    # Write income data
+    for income in incomes:
+        writer.writerow([
+            income.date.strftime('%Y-%m-%d'),
+            'Income',
+            income.description,
+            income.amount,
+            income.source  # Assuming 'source' is the category for income
+        ])
+
+    return response
+
+
+def generate_current_month_transactions_pdf(user_id):
+    """Generates a PDF report for the current month's income and expenses."""
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="current_month_transactions.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+    y_position = height - 50  # Start position
+
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
+
+    # Title
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, y_position, f"Transactions Report - {now.strftime('%B %Y')}")
+    y_position -= 30
+
+    # Draw Expenses
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "🛒 Expenses:")
+    y_position -= 20
+
+    expenses = Expense.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
+    for expense in expenses:
+        p.setFont("Helvetica", 10)
+        text = f"{expense.date} | {expense.description} | ₹{expense.amount} | {expense.category} | {expense.payment_method}"
+        p.drawString(50, y_position, text)
+        y_position -= 15
+
+        if y_position < 50:  # New page if out of space
+            p.showPage()
+            y_position = height - 50
+
+    # Draw Income
+    y_position -= 20
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y_position, "💰 Income:")
+    y_position -= 20
+
+    incomes = Income.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
     for income in incomes:
         p.setFont("Helvetica", 10)
         text = f"{income.date} | {income.source} | ₹{income.amount} | {income.payment_method}"
