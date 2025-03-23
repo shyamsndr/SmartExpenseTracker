@@ -1,7 +1,29 @@
 {% extends 'base.html' %}
 
-{% block title %}Graph - Expensolite{% endblock %}
+{% block title %}Current Month Transactions - Expenzo{% endblock %}
 
 {% block content %}
-<h1>Graph</h1>
+<main class="content">
+    <div class="container-fluid p-0">
+        <div class="mb-3">
+            <h1 class="h3 d-inline align-middle">Current Month Income & Expense Analysis</h1>
+        </div>
+        <div class="row">
+            <!-- Bar Chart -->
+            <div class="col-12">
+                <div class="card flex-fill w-100">
+                    <div class="card-header">
+                        <h5 class="card-title">Income & Expense Breakdown</h5>
+                        <h6 class="card-subtitle text-muted">This chart displays income and expenses for the current month.</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            {{ graph_html|safe }}  <!-- Ensure chart renders -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 {% endblock %}

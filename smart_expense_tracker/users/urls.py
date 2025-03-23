@@ -35,4 +35,5 @@ urlpatterns = [
     path('download_csv_month/', views.download_csv_month, name='download_csv_month'),
     path('export_pdf_month/', views.export_pdf_month, name='export_pdf_month'),
     path('download_pdf_month/', views.download_pdf_month, name='download_pdf_month'),
+    path('current-month-graph/', views.current_month_graph, name='current_month_graph'),
 ]

@@ -666,7 +666,51 @@ def current_month_transaction_edit_view(request, transaction_id):
     return render(request, 'edit_transaction_months.html', {'transaction': transaction})
 
 def current_month_graph(request):
-    return render(request, 'current_month_graph.html')
+    try:
+        user_id = request.session.get('user_id')  # Get logged-in user
+        if not user_id:
+            messages.error(request, "No user found in session!")
+            return render(request, 'current_month_graph.html')
+
+        user = User.objects.get(u_id=user_id)
+        today = now()
+        current_month = today.month
+        current_year = today.year
+
+        # Filter transactions for the current month
+        income_data = Income.objects.filter(user=user, date__month=current_month, date__year=current_year)
+        expense_data = Expense.objects.filter(user=user, date__month=current_month, date__year=current_year)
+
+        # Sum income by category
+        income_by_category = income_data.values('source__name').annotate(total_income=Sum('amount'))
+        expense_by_category = expense_data.values('category__name').annotate(total_expense=Sum('amount'))
+
+        # Prepare labels and values
+        categories = [item['source__name'] for item in income_by_category] + [item['category__name'] for item in expense_by_category]
+        values = [item['total_income'] for item in income_by_category] + [-item['total_expense'] for item in expense_by_category]  # Expenses as negative
+
+        # Plotly Bar Chart
+        trace = go.Bar(
+            x=categories,
+            y=values,
+            marker=dict(color=['#28a745' if val > 0 else '#dc3545' for val in values])  # Green for income, Red for expense
+        )
+
+        layout = go.Layout(
+            title=f'Income & Expense Analysis - {today.strftime("%B %Y")}',
+            xaxis=dict(title='Category'),
+            yaxis=dict(title='Amount'),
+            bargap=0.2
+        )
+
+        graph_figure = go.Figure(data=[trace], layout=layout)
+        graph_html = plot(graph_figure, output_type='div')
+
+        return render(request, 'current_month_graph.html', {'graph_html': graph_html})
+
+    except Exception as e:
+        messages.error(request, f"Error occurred: {str(e)}")
+        return render(request, 'current_month_graph.html')
 
 def export_csv_month(request):
     """Renders the export page with the download button for current month transactions."""
