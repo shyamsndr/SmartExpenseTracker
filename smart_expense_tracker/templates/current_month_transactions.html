@@ -42,7 +42,8 @@
                     <td>{{ transaction.date }}</td>
                     <td>{{ transaction.time }}</td>
                     <td>{{ transaction.description }}</td>
-                    <td>{{ transaction.payment_method }}</td> 
+                    <td>{{ transaction.payment_method.name }}</td>
+
                     <td class="text-success">
                         {% if transaction.amount > 0 %}{{ transaction.amount }}{% endif %}
                     </td>
