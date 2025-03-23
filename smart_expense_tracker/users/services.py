@@ -261,68 +261,91 @@ def generate_transactions_pdf(user_id):
     p.save()
     return response
 
-def export_current_month_to_csv(user):
-    """Generate a CSV file with only current month's income and expenses."""
+def export_current_month_transactions_to_csv(user):
+    """Generate and return a CSV file with only the current month's income and expenses."""
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="current_month_transactions.csv"'
 
     writer = csv.writer(response)
     writer.writerow(['Date', 'Type', 'Description', 'Amount', 'Category'])
 
-    current_month = datetime.now().month
-    current_year = datetime.now().year
+    # Get current month and year
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
 
+    # Fetch both expenses and incomes for the current month
     expenses = Expense.objects.filter(user=user, date__month=current_month, date__year=current_year)
     incomes = Income.objects.filter(user=user, date__month=current_month, date__year=current_year)
 
+    # Write expense data
     for expense in expenses:
-        writer.writerow([expense.date, 'Expense', expense.description, expense.amount, expense.category])
+        writer.writerow([
+            expense.date.strftime('%Y-%m-%d'),
+            'Expense',
+            expense.description,
+            expense.amount,
+            expense.category
+        ])
 
+    # Write income data
     for income in incomes:
-        writer.writerow([income.date, 'Income', income.description, income.amount, income.source])
+        writer.writerow([
+            income.date.strftime('%Y-%m-%d'),
+            'Income',
+            income.description,
+            income.amount,
+            income.source  # Assuming 'source' is the category for income
+        ])
 
     return response
 
-def generate_current_month_pdf(user_id):
-    """Generate a PDF report for only current month's transactions."""
+
+def generate_current_month_transactions_pdf(user_id):
+    """Generates a PDF report for the current month's income and expenses."""
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="current_month_transactions.pdf"'
 
     p = canvas.Canvas(response, pagesize=letter)
     width, height = letter
-    y_position = height - 50
+    y_position = height - 50  # Start position
 
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
+
+    # Title
     p.setFont("Helvetica-Bold", 16)
-    p.drawString(180, y_position, "Current Month Transactions")
+    p.drawString(200, y_position, f"Transactions Report - {now.strftime('%B %Y')}")
     y_position -= 30
 
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-
-    expenses = Expense.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
-    incomes = Income.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
-
+    # Draw Expenses
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y_position, "Expenses:")
+    p.drawString(50, y_position, "🛒 Expenses:")
     y_position -= 20
 
+    expenses = Expense.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
     for expense in expenses:
         p.setFont("Helvetica", 10)
-        p.drawString(50, y_position, f"{expense.date} | {expense.description} | ₹{expense.amount} | {expense.category}")
+        text = f"{expense.date} | {expense.description} | ₹{expense.amount} | {expense.category} | {expense.payment_method}"
+        p.drawString(50, y_position, text)
         y_position -= 15
 
-        if y_position < 50:
+        if y_position < 50:  # New page if out of space
             p.showPage()
             y_position = height - 50
 
+    # Draw Income
     y_position -= 20
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y_position, "Income:")
+    p.drawString(50, y_position, "💰 Income:")
     y_position -= 20
 
+    incomes = Income.objects.filter(user_id=user_id, date__month=current_month, date__year=current_year)
     for income in incomes:
         p.setFont("Helvetica", 10)
-        p.drawString(50, y_position, f"{income.date} | {income.source} | ₹{income.amount}")
+        text = f"{income.date} | {income.source} | ₹{income.amount} | {income.payment_method}"
+        p.drawString(50, y_position, text)
         y_position -= 15
 
         if y_position < 50:

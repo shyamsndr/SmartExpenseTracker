@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User, Category, PaymentMethod, Income, Expense, Budget
 from django.db.models import Sum
@@ -17,8 +17,8 @@ from operator import attrgetter
 from .services import (authenticate_user, register_user, update_profile, change_password, get_income_sources, add_income_source,
                         delete_income_source, add_income, get_payment_methods, add_payment_method, delete_payment_method,
                         get_categories, add_category, delete_category, get_income_sources, get_categories, get_payment_methods,
-                        add_expense, export_transactions_to_csv, generate_transactions_pdf, export_current_month_to_csv,
-                        generate_current_month_pdf)
+                        add_expense, export_transactions_to_csv, generate_transactions_pdf, export_current_month_transactions_to_csv, 
+                        generate_current_month_transactions_pdf)
 
 def base_view(request):
     user = User.objects.get(u_id=request.session['user_id'])  # Fetch user based on session
@@ -669,23 +669,23 @@ def current_month_graph(request):
     return render(request, 'current_month_graph.html')
 
 def export_csv_month(request):
-    """Renders the export page with the download button for the current month."""
+    """Renders the export page with the download button for current month transactions."""
     return render(request, 'export_csv_month.html')
 
 def download_csv_month(request):
-    """Handles the CSV download request for the current month."""
-    if not request.user.is_authenticated:
-        return redirect('login')
+    """Handles the CSV download request for the current month's transactions."""
+    if 'user_id' not in request.session:
+        return redirect('login')  # Redirect if user is not authenticated
 
-    return export_current_month_to_csv(request.user)
+    return export_current_month_transactions_to_csv(request.session['user_id'])
 
 def export_pdf_month(request):
-    """Renders the export page with the download button for the current month."""
+    """Renders the export page with the download button for current month transactions."""
     return render(request, 'export_pdf_month.html')
 
 def download_pdf_month(request):
-    """Handles the PDF download request for the current month."""
-    if not request.user.is_authenticated:
-        return redirect('login')
+    """Handles the PDF download request for the current month's transactions."""
+    if 'user_id' not in request.session:
+        return redirect('login')  # Redirect if user is not authenticated
 
-    return generate_current_month_pdf(request.user.id)
+    return generate_current_month_transactions_pdf(request.session['user_id'])
