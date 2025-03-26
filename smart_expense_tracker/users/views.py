@@ -539,30 +539,42 @@ def compare_years_view(request):
         request.session['year1'] = year1
         request.session['year2'] = year2
 
-    income_year1 = income_year2 = expense_year1 = expense_year2 = None
-    balance_year1 = balance_year2 = 0
+    months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ]
 
-    if year1 and year2:
-        # Get total income and expense for each selected year
-        income_year1 = Income.objects.filter(
-            user=user, date__year=year1
+    monthly_data = []
+
+    for month_index in range(1, 13):  # Loop from 1 (Jan) to 12 (Dec)
+        income1 = Income.objects.filter(
+            user=user, date__year=year1, date__month=month_index
         ).aggregate(total_income=Sum('amount'))['total_income'] or 0
 
-        income_year2 = Income.objects.filter(
-            user=user, date__year=year2
+        income2 = Income.objects.filter(
+            user=user, date__year=year2, date__month=month_index
         ).aggregate(total_income=Sum('amount'))['total_income'] or 0
 
-        expense_year1 = Expense.objects.filter(
-            user=user, date__year=year1
+        expense1 = Expense.objects.filter(
+            user=user, date__year=year1, date__month=month_index
         ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
 
-        expense_year2 = Expense.objects.filter(
-            user=user, date__year=year2
+        expense2 = Expense.objects.filter(
+            user=user, date__year=year2, date__month=month_index
         ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
 
-        # Calculate balance for each year
-        balance_year1 = income_year1 - expense_year1
-        balance_year2 = income_year2 - expense_year2
+        balance1 = income1 - expense1 if (income1 or expense1) else "No Data Found"
+        balance2 = income2 - expense2 if (income2 or expense2) else "No Data Found"
+
+        monthly_data.append({
+            "month": months[month_index - 1],
+            "year1_income": income1 if income1 else "No Data Found",
+            "year1_expense": expense1 if expense1 else "No Data Found",
+            "year1_balance": balance1,
+            "year2_income": income2 if income2 else "No Data Found",
+            "year2_expense": expense2 if expense2 else "No Data Found",
+            "year2_balance": balance2,
+        })
 
     # Generate year choices
     years = [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)]
@@ -570,13 +582,8 @@ def compare_years_view(request):
     context = {
         'year1': year1,
         'year2': year2,
-        'income_year1': income_year1,
-        'income_year2': income_year2,
-        'expense_year1': expense_year1,
-        'expense_year2': expense_year2,
-        'balance_year1': balance_year1,
-        'balance_year2': balance_year2,
         'years': years,
+        'monthly_data': monthly_data,
     }
     return render(request, 'compare_years.html', context)
 
