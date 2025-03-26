@@ -29,33 +29,35 @@
     </form>
 
     {% if year1 and year2 %}
-    <div class="mt-4">
-        <h4 class="text-center">Comparison for {{ year1 }} vs {{ year2 }}</h4>
-        <table class="table table-bordered text-center">
-            <thead class="table-dark">
-                <tr>
-                    <th>Year</th>
-                    <th>Total Income</th>
-                    <th>Total Expense</th>
-                    <th>Balance</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ year1 }}</td>
-                    <td>₹{{ income_year1 }}</td>
-                    <td>₹{{ expense_year1 }}</td>
-                    <td>₹{{ balance_year1 }}</td>
-                </tr>
-                <tr>
-                    <td>{{ year2 }}</td>
-                    <td>₹{{ income_year2 }}</td>
-                    <td>₹{{ expense_year2 }}</td>
-                    <td>₹{{ balance_year2 }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
+<div class="mt-4">
+    <h4 class="text-center">Comparison for {{ year1 }} vs {{ year2 }}</h4>
+    <table class="table table-bordered text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Month</th>
+                <th>{{ year1 }} - Income</th>
+                <th>{{ year1 }} - Expense</th>
+                <th>{{ year1 }} - Balance</th>
+                <th>{{ year2 }} - Income</th>
+                <th>{{ year2 }} - Expense</th>
+                <th>{{ year2 }} - Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in monthly_data %}
+            <tr>
+                <td>{{ data.month }}</td>
+                <td>{{ data.year1_income }}</td>
+                <td>{{ data.year1_expense }}</td>
+                <td>{{ data.year1_balance }}</td>
+                <td>{{ data.year2_income }}</td>
+                <td>{{ data.year2_expense }}</td>
+                <td>{{ data.year2_balance }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 </div>
 {% endblock %}
