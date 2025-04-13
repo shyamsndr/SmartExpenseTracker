@@ -456,9 +456,7 @@ def download_csv(request):
     return export_transactions_to_csv(request.session['user_id'])  # Pass session user ID
 
 def compare_months_view(request):
-    user = request.user  # Get the logged-in user
-
-    # Retrieve session data or set default values
+    user = request.user
     selected_year = request.session.get('selected_year', str(datetime.now().year))
     month1 = request.session.get('month1', '1')
     month2 = request.session.get('month2', '2')
@@ -468,44 +466,77 @@ def compare_months_view(request):
         month1 = request.GET.get('month1', month1)
         month2 = request.GET.get('month2', month2)
 
-        # Save selections in session
         request.session['selected_year'] = selected_year
         request.session['month1'] = month1
         request.session['month2'] = month2
 
-    income_month1 = income_month2 = expense_month1 = expense_month2 = None
-    balance_month1 = balance_month2 = 0
-    month1_name = month2_name = ""
+    month1_name = calendar.month_name[int(month1)]
+    month2_name = calendar.month_name[int(month2)]
 
-    if selected_year and month1 and month2:
-        # Convert month numbers to names
-        month1_name = calendar.month_name[int(month1)]
-        month2_name = calendar.month_name[int(month2)]
+    # Income and expense values
+    income_month1 = Income.objects.filter(user=user, date__year=selected_year, date__month=month1).aggregate(total=Sum('amount'))['total'] or 0
+    income_month2 = Income.objects.filter(user=user, date__year=selected_year, date__month=month2).aggregate(total=Sum('amount'))['total'] or 0
+    expense_month1 = Expense.objects.filter(user=user, date__year=selected_year, date__month=month1).aggregate(total=Sum('amount'))['total'] or 0
+    expense_month2 = Expense.objects.filter(user=user, date__year=selected_year, date__month=month2).aggregate(total=Sum('amount'))['total'] or 0
 
-        # Get total income and expense for each selected month
-        income_month1 = Income.objects.filter(
-            user=user, date__year=selected_year, date__month=month1
-        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+    balance_month1 = income_month1 - expense_month1
+    balance_month2 = income_month2 - expense_month2
 
-        income_month2 = Income.objects.filter(
-            user=user, date__year=selected_year, date__month=month2
-        ).aggregate(total_income=Sum('amount'))['total_income'] or 0
+    # Top expense categories
+    highest_category_month1 = Expense.objects.filter(user=user, date__year=selected_year, date__month=month1)\
+        .values('category__name').annotate(total=Sum('amount')).order_by('-total').first()
+    highest_category_month1 = highest_category_month1['category__name'] if highest_category_month1 else "N/A"
 
-        expense_month1 = Expense.objects.filter(
-            user=user, date__year=selected_year, date__month=month1
-        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+    highest_category_month2 = Expense.objects.filter(user=user, date__year=selected_year, date__month=month2)\
+        .values('category__name').annotate(total=Sum('amount')).order_by('-total').first()
+    highest_category_month2 = highest_category_month2['category__name'] if highest_category_month2 else "N/A"
 
-        expense_month2 = Expense.objects.filter(
-            user=user, date__year=selected_year, date__month=month2
-        ).aggregate(total_expense=Sum('amount'))['total_expense'] or 0
+    # Top income sources
+    highest_income_month1 = Income.objects.filter(user=user, date__year=selected_year, date__month=month1)\
+        .values('source__name').annotate(total=Sum('amount')).order_by('-total').first()
+    highest_income_month1 = highest_income_month1['source__name'] if highest_income_month1 else "N/A"
 
-        # Calculate balance for each month
-        balance_month1 = income_month1 - expense_month1
-        balance_month2 = income_month2 - expense_month2
+    highest_income_month2 = Income.objects.filter(user=user, date__year=selected_year, date__month=month2)\
+        .values('source__name').annotate(total=Sum('amount')).order_by('-total').first()
+    highest_income_month2 = highest_income_month2['source__name'] if highest_income_month2 else "N/A"
 
-    # Generate year and month choices
-    years = [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)]
-    months = [{"number": str(m), "name": calendar.month_name[m]} for m in range(1, 13)]
+    # Category-wise expense difference
+    category_differences = []
+    categories = Category.objects.filter(user=user)
+    for category in categories:
+        month1_amount = Expense.objects.filter(user=user, category=category, date__year=selected_year, date__month=month1).aggregate(total=Sum('amount'))['total'] or 0
+        month2_amount = Expense.objects.filter(user=user, category=category, date__year=selected_year, date__month=month2).aggregate(total=Sum('amount'))['total'] or 0
+        difference = month2_amount - month1_amount
+        status = "Increased" if difference > 0 else "Decreased" if difference < 0 else "No Change"
+
+        category_differences.append({
+            'category': category.name,
+            'month1_expense': month1_amount,
+            'month2_expense': month2_amount,
+            'difference': abs(difference),
+            'status': status
+        })
+
+    # Source-wise income difference
+    income_difference_table = []
+    income_sources_month1 = Income.objects.filter(user=user, date__year=selected_year, date__month=month1).values_list('source__name', flat=True)
+    income_sources_month2 = Income.objects.filter(user=user, date__year=selected_year, date__month=month2).values_list('source__name', flat=True)
+    
+    income_sources = set(income_sources_month1).union(set(income_sources_month2))
+
+    for source in income_sources:
+        income1 = Income.objects.filter(user=user, date__year=selected_year, date__month=month1, source__name=source).aggregate(total=Sum('amount'))['total'] or 0
+        income2 = Income.objects.filter(user=user, date__year=selected_year, date__month=month2, source__name=source).aggregate(total=Sum('amount'))['total'] or 0
+        diff = income2 - income1
+        status = "Increased" if diff > 0 else "Decreased" if diff < 0 else "No Change"
+
+        income_difference_table.append({
+            'category': source,
+            'month1_income': income1,
+            'month2_income': income2,
+            'difference': abs(diff),
+            'status': status
+        })
 
     context = {
         'selected_year': selected_year,
@@ -519,9 +550,16 @@ def compare_months_view(request):
         'expense_month2': expense_month2,
         'balance_month1': balance_month1,
         'balance_month2': balance_month2,
-        'years': years,
-        'months': months,
+        'highest_category_month1': highest_category_month1,
+        'highest_category_month2': highest_category_month2,
+        'highest_income_month1': highest_income_month1,
+        'highest_income_month2': highest_income_month2,
+        'difference_table': category_differences,
+        'income_difference_table': income_difference_table,
+        'years': [str(y) for y in range(datetime.now().year, datetime.now().year - 5, -1)],
+        'months': [{"number": str(m), "name": calendar.month_name[m]} for m in range(1, 13)],
     }
+
     return render(request, 'compare_months.html', context)
 
 def compare_years_view(request):
