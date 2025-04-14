@@ -2,8 +2,9 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-center">Compare Two Months - Expenzo</h2>
+    <h2 class="text-center">Compare Two Months</h2>
 
+    <!-- Form to select year and months -->
     <form method="GET" class="row g-3">
         <div class="col-md-4">
             <label for="year" class="form-label">Select Year:</label>
@@ -38,33 +39,115 @@
     </form>
 
     {% if selected_year and month1_name and month2_name %}
-    <div class="mt-4">
-        <h4 class="text-center">Comparison for {{ selected_year }}</h4>
+    <div class="row mt-5">
+        <!-- First Month Summary -->
+        <div class="col-md-6">
+            <div class="card border-success shadow rounded-3">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ month1_name }} Summary</h5>
+                    <span class="badge bg-light text-success">Month 1</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Total Income:</strong> ₹{{ income_month1 }}</li>
+                        <li class="list-group-item"><strong>Total Expense:</strong> ₹{{ expense_month1 }}</li>
+                        <li class="list-group-item"><strong>Balance:</strong> ₹{{ balance_month1 }}</li>
+                        <li class="list-group-item"><strong>Top Expense Category:</strong> {{ highest_category_month1 }}</li>
+                        <li class="list-group-item"><strong>Top Income Source:</strong> {{ highest_income_month1 }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Second Month Summary -->
+        <div class="col-md-6">
+            <div class="card border-primary shadow rounded-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ month2_name }} Summary</h5>
+                    <span class="badge bg-light text-primary">Month 2</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Total Income:</strong> ₹{{ income_month2 }}</li>
+                        <li class="list-group-item"><strong>Total Expense:</strong> ₹{{ expense_month2 }}</li>
+                        <li class="list-group-item"><strong>Balance:</strong> ₹{{ balance_month2 }}</li>
+                        <li class="list-group-item"><strong>Top Expense Category:</strong> {{ highest_category_month2 }}</li>
+                        <li class="list-group-item"><strong>Top Income Source:</strong> {{ highest_income_month2 }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category-wise Difference Table -->
+    <div class="mt-5">
+        <h4 class="text-center">Category-wise Expense Difference</h4>
         <table class="table table-bordered text-center">
-            <thead class="table-dark">
+            <thead class="table-secondary">
                 <tr>
-                    <th>Month</th>
-                    <th>Total Income</th>
-                    <th>Total Expense</th>
-                    <th>Balance</th>
+                    <th>Category</th>
+                    <th>{{ month1_name }} Expense</th>
+                    <th>{{ month2_name }} Expense</th>
+                    <th>Difference</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
+                {% for item in difference_table %}
                 <tr>
-                    <td>{{ month1_name }}</td>
-                    <td>₹{{ income_month1 }}</td>
-                    <td>₹{{ expense_month1 }}</td>
-                    <td>₹{{ balance_month1 }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>₹{{ item.month1_expense }}</td>
+                    <td>₹{{ item.month2_expense }}</td>
+                    <td>₹{{ item.difference }}</td>
+                    <td>
+                        {% if item.status == 'Increased' %}
+                            <span class="text-danger">Increased</span>
+                        {% elif item.status == 'Decreased' %}
+                            <span class="text-success">Decreased</span>
+                        {% else %}
+                            <span class="text-muted">No Change</span>
+                        {% endif %}
+                    </td>
                 </tr>
-                <tr>
-                    <td>{{ month2_name }}</td>
-                    <td>₹{{ income_month2 }}</td>
-                    <td>₹{{ expense_month2 }}</td>
-                    <td>₹{{ balance_month2 }}</td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
+<!-- Source-wise Income Difference Table -->
+<div class="mt-5">
+    <h4 class="text-center">Source-wise Income Difference</h4>
+    <table class="table table-bordered text-center">
+        <thead class="table-secondary">
+            <tr>
+                <th>Income Source</th>
+                <th>{{ month1_name }} Income</th>
+                <th>{{ month2_name }} Income</th>
+                <th>Difference</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in income_difference_table %}
+            <tr>
+                <td>{{ item.category }}</td>
+                <td>₹{{ item.month1_income }}</td>
+                <td>₹{{ item.month2_income }}</td>
+                <td>₹{{ item.difference }}</td>
+                <td>
+                    {% if item.status == 'Increased' %}
+                        <span class="text-success">Increased</span>
+                    {% elif item.status == 'Decreased' %}
+                        <span class="text-danger">Decreased</span>
+                    {% else %}
+                        <span class="text-muted">No Change</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
     {% endif %}
 </div>
 {% endblock %}
